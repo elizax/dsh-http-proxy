@@ -26,8 +26,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "node -e \"require('node:fs').rmSync('lib',{recursive:true,force:true})\" && tsc -p tsconfig.build.json && tsdown",
-    "typecheck": "tsc --noEmit",
-    "prepare": "tsdown"
+    "typecheck": "tsc --noEmit"
   },
   "dsh": {
     "bundle": {
