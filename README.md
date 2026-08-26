@@ -1,15 +1,77 @@
 # dsh-http-proxy
 
-HTTP proxy for DeepSeek Harness (DSH).
+给 DeepSeek Harness（DSH）加「模型请求走代理、其它请求直连」的能力，**不修改任何 DSH 官方代码**。
 
-## Overview
+本机访问不到大模型、但代理服务器能访问时，装上本插件并配好代理，DSH 就把所有模型 API 请求走代理发出；web 搜索、网页抓取、MCP 等其它请求仍走本机直连。
 
-`dsh-http-proxy` is an HTTP proxy intended to work alongside DeepSeek Harness.
+## 原理
 
-## Getting Started
+插件在运行时把 `globalThis.fetch` 包一层（DSH 的 DeepSeek 适配器和 pi-ai 的 OpenAI/Anthropic SDK 都调用它），按**目标域名**决定走哪条路：
 
-_Coming soon._
+- 域名是模型 API 域名 → 走代理（`undici ProxyAgent`，支持 HTTP/SOCKS5）
+- 其它域名 → 本机直连（原来的 fetch）
+
+整个过程不改 DSH 源码；卸载后 `globalThis.fetch` 恢复原样，不残留任何东西。
+
+## 安装（一条命令）
+
+```bash
+dsh plugin --profile web add github:elizax/dsh-http-proxy
+```
+
+`web` 是 profile 名，换成你自己的 profile 名（如 `headless`）。仓库里已带构建好的 `lib/`，安装时无需编译。
+
+## 重启
+
+```bash
+dsh --profile web
+```
+
+## 配置
+
+在 `$DSH_HOME/settings.yaml` 里加：
+
+```yaml
+http-proxy:
+  proxy: socks5://127.0.0.1:7890      # 你的代理地址
+  proxyHosts:                          # 可选：额外的模型 API 域名
+    - gateway.acme.example
+```
+
+- `proxy`：代理 URL，支持 `http:`、`https:`、`socks4:`、`socks4a:`、`socks5:`、`socks5h:`。留空则插件不生效。
+- `proxyHosts`：额外的模型域名。以下域名**自动**走代理，无需手动列出：
+  - `api.deepseek.com`（官方 DeepSeek 默认域名）
+  - `DEEPSEEK_BASE_URL` 环境变量指向的域名（如果设置了）
+  - `llm-pi-ai` 里配置的自定义网关域名（从 settings 自动读取）
+
+改完下一次请求即生效，无需重启。
+
+## 卸载
+
+```bash
+dsh plugin --profile web remove dsh-http-proxy
+dsh --profile web        # 重启生效
+```
+
+卸载后 DSH 完全恢复直连。
+
+## 限制
+
+- 按**域名**区分「模型请求」和「其它请求」。如果某个非模型操作恰好也访问模型 API 的域名（例如某些网关同时承载搜索和模型），它也会走代理。
+- `transport: websocket` 的流式传输不经 `fetch`，不受影响（保持直连）。
+- 不支持代理认证。
+
+## 给开发者（改源码后重新构建）
+
+改完 `src/` 后，重新构建并提交 `lib/`：
+
+```bash
+pnpm install
+pnpm build      # 生成 lib/
+git add lib/
+git commit -m "build"
+```
 
 ## License
 
-_To be determined._
+MIT

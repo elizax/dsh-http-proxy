@@ -3,7 +3,7 @@ node_modules/
 .pnp
 .pnp.js
 
-# Build output
+# Build output (lib/ is committed so GitHub installs need no build step)
 dist/
 build/
 out/

@@ -1,0 +1,7 @@
+# Optional Profile layer: registers the per-provider-route HTTP/SOCKS proxy
+# plugin. Proxy mapping lives in the plugin's settings namespace (see README),
+# so this row carries no config by default.
+
+- insert:
+    - id: http-proxy
+      name: 'dsh-http-proxy'
