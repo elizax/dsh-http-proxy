@@ -96,7 +96,10 @@ export function apply(ctx: Context, config: PluginConfig): void {
 
   const refresh = (): void => {
     const cfg = current()
-    if (cfg.proxy.length === 0) {
+    // Settings `proxy` wins; the `DSH_HTTP_PROXY` environment variable is the
+    // no-file fallback so a deployment can set the proxy without editing settings.
+    const proxyUrl = cfg.proxy.length > 0 ? cfg.proxy : (process.env.DSH_HTTP_PROXY ?? '')
+    if (proxyUrl.length === 0) {
       deactivate()
       return
     }
@@ -106,7 +109,7 @@ export function apply(ctx: Context, config: PluginConfig): void {
       void previous.close()
     }
     const hosts = collectProxyHosts(ctx, cfg)
-    const entry = createProxyFetch(cfg.proxy)
+    const entry = createProxyFetch(proxyUrl)
     active = entry
     globalThis.fetch = createRoutingFetch(entry.fetch, originalFetch, hosts)
   }
