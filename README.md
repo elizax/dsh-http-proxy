@@ -29,6 +29,14 @@ dsh --profile web
 
 ## 配置
 
+有三种方式（效果相同）：
+
+**方式 A：网页 UI（推荐）**
+
+安装并重启后，打开 DSH 的 **设置 → 插件配置**，找到「HTTP 代理」卡片，填入代理地址，点保存。改完下一次请求生效，无需重启。
+
+**方式 B：settings.yaml**
+
 在 `$DSH_HOME/settings.yaml` 里加：
 
 ```yaml
@@ -38,13 +46,17 @@ http-proxy:
     - gateway.acme.example
 ```
 
+**方式 C：环境变量（不用改文件）**
+
+```powershell
+$env:DSH_HTTP_PROXY = 'socks5://127.0.0.1:7890'
+```
+
 - `proxy`：代理 URL，支持 `http:`、`https:`、`socks4:`、`socks4a:`、`socks5:`、`socks5h:`。留空则插件不生效。
 - `proxyHosts`：额外的模型域名。以下域名**自动**走代理，无需手动列出：
   - `api.deepseek.com`（官方 DeepSeek 默认域名）
   - `DEEPSEEK_BASE_URL` 环境变量指向的域名（如果设置了）
   - `llm-pi-ai` 里配置的自定义网关域名（从 settings 自动读取）
-
-改完下一次请求即生效，无需重启。
 
 ## 卸载
 

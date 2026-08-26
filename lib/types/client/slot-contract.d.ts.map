@@ -1,0 +1,1 @@
+{"version":3,"file":"slot-contract.d.ts","sourceRoot":"","sources":["../../../src/client/slot-contract.ts"],"names":[],"mappings":"AAAA;;;;GAIG;AAEH,OAAO,QAAQ,kCAAkC,CAAC;IAChD,UAAU,OAAO;QACf,sBAAsB,EAAE;YAAE,IAAI,EAAE,OAAO,CAAC;YAAC,KAAK,EAAE,MAAM,CAAC;YAAC,KAAK,EAAE,uBAAuB,CAAA;SAAE,CAAA;KACzF;CACF;AAED,gFAAgF;AAChF,MAAM,WAAW,uBAAuB;IACtC,QAAQ,CAAC,EAAE,KAAK,CAAA;CACjB"}

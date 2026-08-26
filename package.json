@@ -5,34 +5,48 @@
   "license": "MIT",
   "type": "module",
   "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "types": "lib/types/index.d.ts",
   "exports": {
     ".": {
-      "types": "./lib/index.d.ts",
+      "types": "./lib/types/index.d.ts",
       "default": "./lib/index.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
     },
     "./package.json": "./package.json"
   },
   "files": [
-    "lib",
+    "lib/index.js",
+    "lib/client.js",
+    "lib/types",
     "cordis.patch.yml"
   ],
   "sideEffects": false,
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "node -e \"require('node:fs').rmSync('lib',{recursive:true,force:true})\" && tsc -p tsconfig.build.json && tsdown",
+    "typecheck": "tsc --noEmit",
+    "prepare": "tsdown"
   },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "external": [
+        "@deepseek-ai/dsh-client-runtime/client"
+      ]
     }
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/dsh-settings": ">=0.1.1-rc.2"
-  },
-  "peerDependenciesMeta": {
-    "@deepseek-ai/cordis": { "optional": true },
-    "@deepseek-ai/dsh-settings": { "optional": true }
+    "@deepseek-ai/dsh-client-runtime": "^0.1.0-rc.8",
+    "@deepseek-ai/dsh-client-ui-settings": "^0.1.0-rc.8",
+    "@deepseek-ai/dsh-client-ui-slots": "^0.1.0-rc.8",
+    "@deepseek-ai/dsh-settings": "^0.1.0-rc.8",
+    "react": "^18.2.0"
   },
   "dependencies": {
     "@deepseek-ai/schemastery": "^3.18.1",
@@ -40,8 +54,14 @@
   },
   "devDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh-client-runtime": "0.1.1-rc.1",
+    "@deepseek-ai/dsh-client-ui-settings": "0.1.1-rc.1",
+    "@deepseek-ai/dsh-client-ui-slots": "0.1.1-rc.1",
     "@deepseek-ai/dsh-settings": ">=0.1.1-rc.2",
     "@types/node": "^22.0.0",
+    "@types/react": "~18.3.1",
+    "react": "^18.2.0",
+    "tsdown": "^0.22.2",
     "typescript": "^5.6.0"
   }
 }
