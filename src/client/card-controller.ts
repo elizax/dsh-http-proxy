@@ -14,9 +14,14 @@ import { createSnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
 export interface HttpProxySettings {
   /** Proxy URL (http/https/socks4/socks4a/socks5/socks5h); empty = inactive. */
   proxy?: string
-  /** Extra model-API hostnames routed through the proxy. */
+  /** Hostnames to proxy (empty = auto-detect every model host). */
   proxyHosts?: string[]
+  /** Hostnames never proxied. */
+  excludeHosts?: string[]
 }
+
+/** One editable field of the card. */
+type FieldName = 'proxy' | 'proxyHosts' | 'excludeHosts'
 
 /** What the http-proxy card renders. */
 export interface HttpProxyCardState {
@@ -26,8 +31,10 @@ export interface HttpProxyCardState {
   writable: boolean
   /** Staged proxy URL. */
   proxy: string
-  /** Staged extra hosts, comma/space separated. */
+  /** Staged proxy-only hosts, comma/space separated. */
   proxyHosts: string
+  /** Staged excluded hosts, comma/space separated. */
+  excludeHosts: string
   /** Whether a save is crossing the wire. */
   saving: boolean
   /** Whether the last save did not land. */
@@ -39,7 +46,7 @@ export interface HttpProxyCardFace {
   /** Card snapshot bound by the renderer as useHttpProxyCard. */
   hooks: { httpProxyCard: SnapshotStore<HttpProxyCardState> }
   /** Stage draft text for one field. */
-  edit: (field: 'proxy' | 'proxyHosts', text: string) => void
+  edit: (field: FieldName, text: string) => void
   /** Write every staged edit. */
   save: () => void
   /** Drop every staged edit. */
@@ -49,7 +56,7 @@ export interface HttpProxyCardFace {
 /** Bridges the `http-proxy` scope onto the card with a minimal staged form. */
 export class HttpProxyCardController {
   private readonly store: SnapshotStore<HttpProxyCardState>
-  private readonly staged = new Map<'proxy' | 'proxyHosts', string>()
+  private readonly staged = new Map<FieldName, string>()
   private saving = false
   private failed = false
 
@@ -71,6 +78,7 @@ export class HttpProxyCardController {
       writable: snap.writable,
       proxy: this.staged.get('proxy') ?? (typeof value.proxy === 'string' ? value.proxy : ''),
       proxyHosts: this.staged.get('proxyHosts') ?? (Array.isArray(value.proxyHosts) ? value.proxyHosts.join(', ') : ''),
+      excludeHosts: this.staged.get('excludeHosts') ?? (Array.isArray(value.excludeHosts) ? value.excludeHosts.join(', ') : ''),
       saving: this.saving,
       failed: this.failed,
     }
@@ -113,7 +121,12 @@ export class HttpProxyCardController {
       if (this.staged.has('proxyHosts')) {
         const text = (this.staged.get('proxyHosts') ?? '').trim()
         if (text === '') await this.scope.unset('proxyHosts')
-        else await this.scope.set('proxyHosts', text.split(/[,\s]+/).filter(part => part.length > 0))
+        else await this.scope.set('proxyHosts', this.splitHosts(text))
+      }
+      if (this.staged.has('excludeHosts')) {
+        const text = (this.staged.get('excludeHosts') ?? '').trim()
+        if (text === '') await this.scope.unset('excludeHosts')
+        else await this.scope.set('excludeHosts', this.splitHosts(text))
       }
       this.staged.clear()
     } catch {
@@ -122,5 +135,9 @@ export class HttpProxyCardController {
     this.saving = false
     this.failed = !landed
     this.publish()
+  }
+
+  private splitHosts(text: string): string[] {
+    return text.split(/[,\s]+/).filter(part => part.length > 0)
   }
 }

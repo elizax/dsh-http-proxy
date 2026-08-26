@@ -42,8 +42,10 @@ dsh --profile web
 ```yaml
 http-proxy:
   proxy: socks5://127.0.0.1:7890      # 你的代理地址
-  proxyHosts:                          # 可选：额外的模型 API 域名
+  proxyHosts:                          # 只代理这些域名（留空 = 自动代理所有模型）
     - gateway.acme.example
+  excludeHosts:                        # 排除这些域名（可选，自动识别出来的也能排除）
+    - api.deepseek.com
 ```
 
 **方式 C：环境变量（不用改文件）**
@@ -53,10 +55,11 @@ $env:DSH_HTTP_PROXY = 'socks5://127.0.0.1:7890'
 ```
 
 - `proxy`：代理 URL，支持 `http:`、`https:`、`socks4:`、`socks4a:`、`socks5:`、`socks5h:`。留空则插件不生效。
-- `proxyHosts`：额外的模型域名。以下域名**自动**走代理，无需手动列出：
+- `proxyHosts`：**留空 = 自动代理所有模型域名**；填写 = 只代理列出的这些域名。自动识别的模型域名包括：
   - `api.deepseek.com`（官方 DeepSeek 默认域名）
   - `DEEPSEEK_BASE_URL` 环境变量指向的域名（如果设置了）
   - `llm-pi-ai` 里配置的自定义网关域名（从 settings 自动读取）
+- `excludeHosts`：永远不走代理的域名，优先级最高（即使被自动识别或列在 `proxyHosts` 里，也会被排除）。
 
 ## 卸载
 

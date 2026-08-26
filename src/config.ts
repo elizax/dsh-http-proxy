@@ -24,17 +24,21 @@ export interface Config {
    */
   proxy: string
   /**
-   * Extra model-API hostnames to route through the proxy. `api.deepseek.com`
-   * (and `DEEPSEEK_BASE_URL`, when set) are always included; list your custom
-   * gateway hosts here. Requests to any other host keep the direct path.
+   * Hostnames routed through the proxy. Empty means "auto-detect all model-API
+   * hosts" (`api.deepseek.com`, `DEEPSEEK_BASE_URL`, and every `llm-pi-ai`
+   * gateway `baseURL`); non-empty means route ONLY these hosts, ignoring
+   * auto-detection.
    */
   proxyHosts: string[]
+  /** Hostnames that must never be routed, even when auto-detected or listed. */
+  excludeHosts: string[]
 }
 
 /** Runtime schema for {@link Config}. */
 export const Config: z<Config> = z.object({
   proxy: z.string().default(''),
   proxyHosts: z.array(z.string()).default([]),
+  excludeHosts: z.array(z.string()).default([]),
 })
 
 /**

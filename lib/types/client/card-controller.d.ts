@@ -11,9 +11,13 @@ import type { SettingsScope, SnapshotStore } from '@deepseek-ai/dsh-client-runti
 export interface HttpProxySettings {
     /** Proxy URL (http/https/socks4/socks4a/socks5/socks5h); empty = inactive. */
     proxy?: string;
-    /** Extra model-API hostnames routed through the proxy. */
+    /** Hostnames to proxy (empty = auto-detect every model host). */
     proxyHosts?: string[];
+    /** Hostnames never proxied. */
+    excludeHosts?: string[];
 }
+/** One editable field of the card. */
+type FieldName = 'proxy' | 'proxyHosts' | 'excludeHosts';
 /** What the http-proxy card renders. */
 export interface HttpProxyCardState {
     /** False while the namespace is not served to this client. */
@@ -22,8 +26,10 @@ export interface HttpProxyCardState {
     writable: boolean;
     /** Staged proxy URL. */
     proxy: string;
-    /** Staged extra hosts, comma/space separated. */
+    /** Staged proxy-only hosts, comma/space separated. */
     proxyHosts: string;
+    /** Staged excluded hosts, comma/space separated. */
+    excludeHosts: string;
     /** Whether a save is crossing the wire. */
     saving: boolean;
     /** Whether the last save did not land. */
@@ -36,7 +42,7 @@ export interface HttpProxyCardFace {
         httpProxyCard: SnapshotStore<HttpProxyCardState>;
     };
     /** Stage draft text for one field. */
-    edit: (field: 'proxy' | 'proxyHosts', text: string) => void;
+    edit: (field: FieldName, text: string) => void;
     /** Write every staged edit. */
     save: () => void;
     /** Drop every staged edit. */
@@ -57,5 +63,7 @@ export declare class HttpProxyCardController {
     /** Build the face the card's slot registration injects. */
     inject(): HttpProxyCardFace;
     private save;
+    private splitHosts;
 }
+export {};
 //# sourceMappingURL=card-controller.d.ts.map

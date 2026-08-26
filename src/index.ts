@@ -47,29 +47,39 @@ interface PiAiSection {
  * @returns the proxied hostname set.
  */
 function collectProxyHosts(ctx: Context, config: PluginConfig): Set<string> {
-  const hosts = new Set<string>([DEFAULT_DEEPSEEK_HOST])
-  const deepseekBase = process.env.DEEPSEEK_BASE_URL
-  if (deepseekBase !== undefined && deepseekBase.length > 0) {
-    try {
-      hosts.add(hostnameOf(deepseekBase))
-    } catch {
-      // A malformed base URL is the adapter's to reject, not this plugin's.
+  const hosts = new Set<string>()
+  if (config.proxyHosts.length > 0) {
+    // Explicit mode: only the listed hosts are proxied.
+    for (const host of config.proxyHosts) {
+      if (host.length > 0) hosts.add(host)
     }
-  }
-  for (const host of config.proxyHosts) {
-    if (host.length > 0) hosts.add(host)
-  }
-  const settings = ctx.get('settings') as SettingsLike | undefined
-  const section = settings?.get?.('llm-pi-ai') as PiAiSection | undefined
-  for (const profile of Object.values(section?.providers ?? {})) {
-    const baseURL = profile.baseURL
-    if (baseURL !== undefined && baseURL.length > 0) {
+  } else {
+    // Auto mode: every model-API host DSH knows about.
+    hosts.add(DEFAULT_DEEPSEEK_HOST)
+    const deepseekBase = process.env.DEEPSEEK_BASE_URL
+    if (deepseekBase !== undefined && deepseekBase.length > 0) {
       try {
-        hosts.add(hostnameOf(baseURL))
+        hosts.add(hostnameOf(deepseekBase))
       } catch {
-        // Same as above: configuration errors surface where they are written.
+        // A malformed base URL is the adapter's to reject, not this plugin's.
       }
     }
+    const settings = ctx.get('settings') as SettingsLike | undefined
+    const section = settings?.get?.('llm-pi-ai') as PiAiSection | undefined
+    for (const profile of Object.values(section?.providers ?? {})) {
+      const baseURL = profile.baseURL
+      if (baseURL !== undefined && baseURL.length > 0) {
+        try {
+          hosts.add(hostnameOf(baseURL))
+        } catch {
+          // Same as above: configuration errors surface where they are written.
+        }
+      }
+    }
+  }
+  // Exclusions always win, in either mode.
+  for (const host of config.excludeHosts) {
+    if (host.length > 0) hosts.delete(host)
   }
   return hosts
 }

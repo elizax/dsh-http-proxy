@@ -69,7 +69,7 @@ export function HttpProxyCard(props: HttpProxyCardProps) {
         disabled={!state.writable}
         onChange={event => { props.edit('proxy', event.target.value) }}
       />
-      <label style={styles.label} htmlFor="http-proxy-hosts">额外模型域名（逗号分隔，可选）</label>
+      <label style={styles.label} htmlFor="http-proxy-hosts">只代理这些域名（留空 = 所有模型，逗号分隔）</label>
       <input
         id="http-proxy-hosts"
         style={styles.input}
@@ -78,6 +78,16 @@ export function HttpProxyCard(props: HttpProxyCardProps) {
         value={state.proxyHosts}
         disabled={!state.writable}
         onChange={event => { props.edit('proxyHosts', event.target.value) }}
+      />
+      <label style={styles.label} htmlFor="http-proxy-exclude">排除域名（逗号分隔，可选）</label>
+      <input
+        id="http-proxy-exclude"
+        style={styles.input}
+        type="text"
+        placeholder="api.deepseek.com"
+        value={state.excludeHosts}
+        disabled={!state.writable}
+        onChange={event => { props.edit('excludeHosts', event.target.value) }}
       />
       <div style={styles.actions}>
         <button type="button" style={styles.button} disabled={disabled} onClick={props.save}>保存</button>
