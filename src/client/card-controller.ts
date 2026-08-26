@@ -53,8 +53,6 @@ export interface HttpProxyCardFace {
   edit: (field: FieldName, text: string) => void
   /** Write every staged edit. */
   save: () => void
-  /** Drop every staged edit. */
-  discard: () => void
 }
 
 /** Bridges the `http-proxy` scope onto the card with a minimal staged form. */
@@ -106,13 +104,6 @@ export class HttpProxyCardController {
         this.publish()
       },
       save: () => { void this.save() },
-      discard: () => {
-        if (this.staged.size === 0 && !this.failed) return
-        this.staged.clear()
-        this.failed = false
-        this.saved = false
-        this.publish()
-      },
     }
   }
 

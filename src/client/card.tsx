@@ -95,9 +95,6 @@ export function HttpProxyCard(props: HttpProxyCardProps) {
         <button type="button" style={styles.button} disabled={disabled || !state.dirty} onClick={props.save}>
           {state.saving ? '保存中…' : '保存'}
         </button>
-        <button type="button" style={styles.button} disabled={state.saving || (!state.dirty && !state.failed)} onClick={props.discard}>
-          放弃
-        </button>
         {state.saving
           ? <span style={styles.saving}>正在写入…</span>
           : state.failed

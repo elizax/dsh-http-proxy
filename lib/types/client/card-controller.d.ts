@@ -49,8 +49,6 @@ export interface HttpProxyCardFace {
     edit: (field: FieldName, text: string) => void;
     /** Write every staged edit. */
     save: () => void;
-    /** Drop every staged edit. */
-    discard: () => void;
 }
 /** Bridges the `http-proxy` scope onto the card with a minimal staged form. */
 export declare class HttpProxyCardController {
