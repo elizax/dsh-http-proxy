@@ -14,8 +14,7 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "lib/index.js",
-    "lib/index.d.ts",
+    "lib",
     "cordis.patch.yml"
   ],
   "sideEffects": false,
