@@ -29,37 +29,30 @@ dsh --profile web
 
 ## 配置
 
-有三种方式（效果相同）：
+有两种方式，效果相同：
 
 **方式 A：网页 UI（推荐）**
 
-安装并重启后，打开 DSH 的 **设置 → 插件配置**，找到「HTTP 代理」卡片，填入代理地址，点保存。改完下一次请求生效，无需重启。
+安装并重启后，打开 DSH 的 **设置 → 插件配置**，找到「HTTP 代理」卡片，填入代理地址，点保存。改完下一次请求生效，无需重启。卡片还支持「只代理这些域名」和「排除域名」，用于按需控制代理范围。
 
-**方式 B：settings.yaml**
-
-在 `$DSH_HOME/settings.yaml` 里加：
-
-```yaml
-http-proxy:
-  proxy: socks5://127.0.0.1:7890      # 你的代理地址
-  proxyHosts:                          # 只代理这些域名（留空 = 自动代理所有模型）
-    - gateway.acme.example
-  excludeHosts:                        # 排除这些域名（可选，自动识别出来的也能排除）
-    - api.deepseek.com
-```
-
-**方式 C：环境变量（不用改文件）**
+**方式 B：环境变量（不改文件，适合临时试用）**
 
 ```powershell
 $env:DSH_HTTP_PROXY = 'socks5://127.0.0.1:7890'
 ```
 
-- `proxy`：代理 URL，支持 `http:`、`https:`、`socks4:`、`socks4a:`、`socks5:`、`socks5h:`。留空则插件不生效。
-- `proxyHosts`：**留空 = 自动代理所有模型域名**；填写 = 只代理列出的这些域名。自动识别的模型域名包括：
+环境变量只提供代理地址，等价于在 UI 里填「代理地址」；域名过滤沿用默认的自动识别。若两者同时设置，以 UI（settings）里的 `proxy` 为准。
+
+### 配置字段
+
+UI 卡片与底层配置一一对应：
+
+- `proxy`（代理地址）：代理 URL，支持 `http:`、`https:`、`socks4:`、`socks4a:`、`socks5:`、`socks5h:`。留空则插件不生效。
+- `proxyHosts`（只代理这些域名）：**留空 = 自动代理所有模型域名**；填写 = 只代理列出的这些域名。自动识别的模型域名包括：
   - `api.deepseek.com`（官方 DeepSeek 默认域名）
   - `DEEPSEEK_BASE_URL` 环境变量指向的域名（如果设置了）
   - `llm-pi-ai` 里配置的自定义网关域名（从 settings 自动读取）
-- `excludeHosts`：永远不走代理的域名，优先级最高（即使被自动识别或列在 `proxyHosts` 里，也会被排除）。
+- `excludeHosts`（排除域名）：永远不走代理的域名，优先级最高（即使被自动识别或列在 `proxyHosts` 里，也会被排除）。
 
 ## 卸载
 
@@ -68,7 +61,7 @@ dsh plugin --profile web remove dsh-http-proxy
 dsh --profile web        # 重启生效
 ```
 
-卸载后 DSH 完全恢复直连。
+卸载后 DSH 完全恢复直连，不残留任何配置改动。
 
 ## 限制
 
