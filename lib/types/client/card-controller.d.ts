@@ -30,8 +30,12 @@ export interface HttpProxyCardState {
     proxyHosts: string;
     /** Staged excluded hosts, comma/space separated. */
     excludeHosts: string;
+    /** Whether the form holds edits a save would write. */
+    dirty: boolean;
     /** Whether a save is crossing the wire. */
     saving: boolean;
+    /** Whether the last save landed as staged. */
+    saved: boolean;
     /** Whether the last save did not land. */
     failed: boolean;
 }
@@ -54,6 +58,7 @@ export declare class HttpProxyCardController {
     private readonly store;
     private readonly staged;
     private saving;
+    private saved;
     private failed;
     /** @param scope - the bound settings scope for the `http-proxy` namespace. */
     constructor(scope: SettingsScope<HttpProxySettings>);

@@ -44,6 +44,8 @@ const styles = {
     cursor: 'pointer',
   } as const,
   failed: { fontSize: '12px', color: '#e5484d' } as const,
+  saved: { fontSize: '12px', color: '#2f9e44' } as const,
+  saving: { fontSize: '12px', opacity: 0.7 } as const,
 }
 
 /**
@@ -90,9 +92,19 @@ export function HttpProxyCard(props: HttpProxyCardProps) {
         onChange={event => { props.edit('excludeHosts', event.target.value) }}
       />
       <div style={styles.actions}>
-        <button type="button" style={styles.button} disabled={disabled} onClick={props.save}>保存</button>
-        <button type="button" style={styles.button} disabled={state.saving} onClick={props.discard}>放弃</button>
-        {state.failed ? <span style={styles.failed}>保存失败，请重试</span> : null}
+        <button type="button" style={styles.button} disabled={disabled || !state.dirty} onClick={props.save}>
+          {state.saving ? '保存中…' : '保存'}
+        </button>
+        <button type="button" style={styles.button} disabled={state.saving || (!state.dirty && !state.failed)} onClick={props.discard}>
+          放弃
+        </button>
+        {state.saving
+          ? <span style={styles.saving}>正在写入…</span>
+          : state.failed
+            ? <span style={styles.failed}>保存失败，请重试</span>
+            : state.saved
+              ? <span style={styles.saved}>已保存 ✓</span>
+              : null}
       </div>
     </div>
   )

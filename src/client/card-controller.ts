@@ -35,8 +35,12 @@ export interface HttpProxyCardState {
   proxyHosts: string
   /** Staged excluded hosts, comma/space separated. */
   excludeHosts: string
+  /** Whether the form holds edits a save would write. */
+  dirty: boolean
   /** Whether a save is crossing the wire. */
   saving: boolean
+  /** Whether the last save landed as staged. */
+  saved: boolean
   /** Whether the last save did not land. */
   failed: boolean
 }
@@ -58,6 +62,7 @@ export class HttpProxyCardController {
   private readonly store: SnapshotStore<HttpProxyCardState>
   private readonly staged = new Map<FieldName, string>()
   private saving = false
+  private saved = false
   private failed = false
 
   /** @param scope - the bound settings scope for the `http-proxy` namespace. */
@@ -79,7 +84,9 @@ export class HttpProxyCardController {
       proxy: this.staged.get('proxy') ?? (typeof value.proxy === 'string' ? value.proxy : ''),
       proxyHosts: this.staged.get('proxyHosts') ?? (Array.isArray(value.proxyHosts) ? value.proxyHosts.join(', ') : ''),
       excludeHosts: this.staged.get('excludeHosts') ?? (Array.isArray(value.excludeHosts) ? value.excludeHosts.join(', ') : ''),
+      dirty: this.staged.size > 0,
       saving: this.saving,
+      saved: this.saved,
       failed: this.failed,
     }
   }
@@ -95,12 +102,15 @@ export class HttpProxyCardController {
       edit: (field, text) => {
         this.staged.set(field, text)
         this.failed = false
+        this.saved = false
         this.publish()
       },
       save: () => { void this.save() },
       discard: () => {
+        if (this.staged.size === 0 && !this.failed) return
         this.staged.clear()
         this.failed = false
+        this.saved = false
         this.publish()
       },
     }
@@ -109,6 +119,7 @@ export class HttpProxyCardController {
   private async save(): Promise<void> {
     if (this.staged.size === 0 || this.saving) return
     this.saving = true
+    this.saved = false
     this.failed = false
     this.publish()
     let landed = true
@@ -129,6 +140,7 @@ export class HttpProxyCardController {
         else await this.scope.set('excludeHosts', this.splitHosts(text))
       }
       this.staged.clear()
+      this.saved = true
     } catch {
       landed = false
     }
