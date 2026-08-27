@@ -135,7 +135,22 @@ export function apply(ctx: Context, config: PluginConfig): void {
     // No config actually moved: keep the current dispatcher and wrapper, so an
     // unrelated settings save never tears down in-flight proxy connections.
     if (active !== undefined && active.proxyUrl === proxyUrl && sameHostSet(active.hosts, hosts)) return
-    const entry = createProxyFetch(proxyUrl)
+    let entry: ProxyFetch
+    try {
+      // `assertValid` guards the settings write path, but the `DSH_HTTP_PROXY`
+      // fallback bypasses it — judge the resolved URL here too, so a bad value
+      // degrades to "routing off" instead of failing the plugin mount.
+      assertValid({ proxy: proxyUrl, proxyHosts: cfg.proxyHosts, excludeHosts: cfg.excludeHosts })
+      entry = createProxyFetch(proxyUrl)
+    } catch (cause) {
+      ctx.logger.warn(
+        'http-proxy: invalid proxy URL "%s" (%s); routing stays off',
+        proxyUrl,
+        cause instanceof Error ? cause.message : String(cause),
+      )
+      deactivate()
+      return
+    }
     const next = { proxyUrl, hosts, entry }
     const previous = active
     active = next
