@@ -1,5 +1,7 @@
 /**
- * The http-proxy settings card's staged form over the `http-proxy` namespace.
+ * The http-proxy settings card's staged form over the `http-proxy` namespace,
+ * plus the read-only `llm-pi-ai` view that supplies the hostname suggestions
+ * for the two host fields.
  *
  * A card stages what the user types and writes only on save, so a typed draft
  * never mutates the durable document before the user commits it. The Host's
@@ -20,8 +22,16 @@ export interface HttpProxySettings {
   excludeHosts?: string[]
 }
 
+/** The `llm-pi-ai` section subset this card reads for known model gateways. */
+export interface PiAiSettings {
+  providers?: Record<string, { baseURL?: string }>
+}
+
 /** One editable field of the card. */
 type FieldName = 'proxy' | 'proxyHosts' | 'excludeHosts'
+
+/** The official DeepSeek adapter's default endpoint host; keep in sync with src/index.ts. */
+const DEFAULT_DEEPSEEK_HOST = 'api.deepseek.com'
 
 /** What the http-proxy card renders. */
 export interface HttpProxyCardState {
@@ -35,6 +45,8 @@ export interface HttpProxyCardState {
   proxyHosts: string
   /** Staged excluded hosts, comma/space separated. */
   excludeHosts: string
+  /** Known model hostnames offered by the host fields' dropdown (free text still allowed). */
+  suggestions: string[]
   /** Whether the form holds edits a save would write. */
   dirty: boolean
   /** Whether a save is crossing the wire. */
@@ -55,6 +67,11 @@ export interface HttpProxyCardFace {
   save: () => void
 }
 
+/** Extract the hostname from an absolute URL string; throws on malformed input. */
+function hostnameOf(value: string): string {
+  return new URL(value).hostname
+}
+
 /** Bridges the `http-proxy` scope onto the card with a minimal staged form. */
 export class HttpProxyCardController {
   private readonly store: SnapshotStore<HttpProxyCardState>
@@ -63,14 +80,47 @@ export class HttpProxyCardController {
   private saved = false
   private failed = false
 
-  /** @param scope - the bound settings scope for the `http-proxy` namespace. */
-  constructor(private readonly scope: SettingsScope<HttpProxySettings>) {
+  /**
+   * @param scope - the bound settings scope for the `http-proxy` namespace.
+   * @param known - the bound read-only `llm-pi-ai` scope that supplies gateway hostnames.
+   */
+  constructor(
+    private readonly scope: SettingsScope<HttpProxySettings>,
+    private readonly known: SettingsScope<PiAiSettings>,
+  ) {
     this.store = createSnapshotStore(this.projection())
     scope.subscribe(() => this.publish())
+    known.subscribe(() => this.publish())
   }
 
   private snapshot(): SettingsScopeSnapshot<HttpProxySettings> {
     return this.scope.getSnapshot()
+  }
+
+  /** Hostnames offered by the host fields: the default DeepSeek host, every configured gateway, and what is already saved. */
+  private suggestions(): string[] {
+    const hosts = new Set<string>([DEFAULT_DEEPSEEK_HOST])
+    const value = this.snapshot().value ?? {}
+    const addList = (list: string[] | undefined): void => {
+      if (!Array.isArray(list)) return
+      for (const host of list) {
+        if (typeof host === 'string' && host.length > 0) hosts.add(host)
+      }
+    }
+    addList(value.proxyHosts)
+    addList(value.excludeHosts)
+    const known = this.known.getSnapshot().value ?? {}
+    for (const profile of Object.values(known.providers ?? {})) {
+      const baseURL = profile.baseURL
+      if (typeof baseURL === 'string' && baseURL.length > 0) {
+        try {
+          hosts.add(hostnameOf(baseURL))
+        } catch {
+          // A malformed baseURL is pi-ai's to reject, not this card's to judge.
+        }
+      }
+    }
+    return [...hosts].sort()
   }
 
   private projection(): HttpProxyCardState {
@@ -82,6 +132,7 @@ export class HttpProxyCardController {
       proxy: this.staged.get('proxy') ?? (typeof value.proxy === 'string' ? value.proxy : ''),
       proxyHosts: this.staged.get('proxyHosts') ?? (Array.isArray(value.proxyHosts) ? value.proxyHosts.join(', ') : ''),
       excludeHosts: this.staged.get('excludeHosts') ?? (Array.isArray(value.excludeHosts) ? value.excludeHosts.join(', ') : ''),
+      suggestions: this.suggestions(),
       dirty: this.staged.size > 0,
       saving: this.saving,
       saved: this.saved,

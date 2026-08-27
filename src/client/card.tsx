@@ -26,6 +26,8 @@ function ValueField(props: {
   value: string
   disabled: boolean
   onEdit: (text: string) => void
+  /** Optional datalist id: offers suggestions while still allowing free text. */
+  list?: string
 }) {
   return (
     <div className={css.field}>
@@ -39,6 +41,7 @@ function ValueField(props: {
         value={props.value}
         placeholder={props.placeholder}
         disabled={props.disabled}
+        list={props.list}
         onChange={(event) => { props.onEdit(event.target.value) }}
       />
       <p className={css.hint}>{props.hint}</p>
@@ -76,6 +79,9 @@ export function HttpProxyCard(props: HttpProxyCardProps) {
         ? (
           <div className={css.body}>
             {!state.writable ? <p className={css.readOnly} role="status">本部署的设置为只读。</p> : null}
+            <datalist id="http-proxy-model-hosts">
+              {state.suggestions.map(host => <option key={host} value={host} />)}
+            </datalist>
             <ValueField
               id="http-proxy-url"
               label="代理地址"
@@ -88,19 +94,21 @@ export function HttpProxyCard(props: HttpProxyCardProps) {
             <ValueField
               id="http-proxy-hosts"
               label="只代理这些域名"
-              hint="留空 = 自动代理所有模型域名；填写 = 只代理列出的这些域名（逗号分隔）。"
+              hint="留空 = 自动代理所有模型域名；填写 = 只代理列出的这些域名（逗号分隔，可从下拉选择）。"
               placeholder="gateway.acme.example"
               value={state.proxyHosts}
               disabled={disabled}
+              list="http-proxy-model-hosts"
               onEdit={text => { props.edit('proxyHosts', text) }}
             />
             <ValueField
               id="http-proxy-exclude"
               label="排除域名"
-              hint="永远不走代理，优先级最高（逗号分隔，可选）。"
+              hint="永远不走代理，优先级最高（逗号分隔，可选，可从下拉选择）。"
               placeholder="api.deepseek.com"
               value={state.excludeHosts}
               disabled={disabled}
+              list="http-proxy-model-hosts"
               onEdit={text => { props.edit('excludeHosts', text) }}
             />
             <div className={css.footer}>

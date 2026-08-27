@@ -16,6 +16,9 @@ import { HttpProxyCardController } from './card-controller.js'
 /** Settings namespace the Host half owns; keep in sync with src/index.ts. */
 const NS = 'http-proxy'
 
+/** The `llm-pi-ai` namespace, read-only here, supplying gateway hostname suggestions. */
+const PI_AI_NS = 'llm-pi-ai'
+
 /** Required services (cordis fiber inject). */
 export const inject = ['slots', 'settingsScope']
 
@@ -24,7 +27,10 @@ export const inject = ['slots', 'settingsScope']
  * @param ctx - the browser plugin context.
  */
 export function apply(ctx: ClientContext): void {
-  const controller = new HttpProxyCardController(ctx.settingsScope.bind({ namespace: NS }))
+  const controller = new HttpProxyCardController(
+    ctx.settingsScope.bind({ namespace: NS }),
+    ctx.settingsScope.bind({ namespace: PI_AI_NS }),
+  )
   ctx.slots.inject('settings.plugin.item', function* () {
     yield ctx.slots.register({
       name: 'settings.plugin.item',

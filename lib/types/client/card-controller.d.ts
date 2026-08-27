@@ -1,5 +1,7 @@
 /**
- * The http-proxy settings card's staged form over the `http-proxy` namespace.
+ * The http-proxy settings card's staged form over the `http-proxy` namespace,
+ * plus the read-only `llm-pi-ai` view that supplies the hostname suggestions
+ * for the two host fields.
  *
  * A card stages what the user types and writes only on save, so a typed draft
  * never mutates the durable document before the user commits it. The Host's
@@ -16,6 +18,12 @@ export interface HttpProxySettings {
     /** Hostnames never proxied. */
     excludeHosts?: string[];
 }
+/** The `llm-pi-ai` section subset this card reads for known model gateways. */
+export interface PiAiSettings {
+    providers?: Record<string, {
+        baseURL?: string;
+    }>;
+}
 /** One editable field of the card. */
 type FieldName = 'proxy' | 'proxyHosts' | 'excludeHosts';
 /** What the http-proxy card renders. */
@@ -30,6 +38,8 @@ export interface HttpProxyCardState {
     proxyHosts: string;
     /** Staged excluded hosts, comma/space separated. */
     excludeHosts: string;
+    /** Known model hostnames offered by the host fields' dropdown (free text still allowed). */
+    suggestions: string[];
     /** Whether the form holds edits a save would write. */
     dirty: boolean;
     /** Whether a save is crossing the wire. */
@@ -53,14 +63,20 @@ export interface HttpProxyCardFace {
 /** Bridges the `http-proxy` scope onto the card with a minimal staged form. */
 export declare class HttpProxyCardController {
     private readonly scope;
+    private readonly known;
     private readonly store;
     private readonly staged;
     private saving;
     private saved;
     private failed;
-    /** @param scope - the bound settings scope for the `http-proxy` namespace. */
-    constructor(scope: SettingsScope<HttpProxySettings>);
+    /**
+     * @param scope - the bound settings scope for the `http-proxy` namespace.
+     * @param known - the bound read-only `llm-pi-ai` scope that supplies gateway hostnames.
+     */
+    constructor(scope: SettingsScope<HttpProxySettings>, known: SettingsScope<PiAiSettings>);
     private snapshot;
+    /** Hostnames offered by the host fields: the default DeepSeek host, every configured gateway, and what is already saved. */
+    private suggestions;
     private projection;
     private publish;
     /** Build the face the card's slot registration injects. */
