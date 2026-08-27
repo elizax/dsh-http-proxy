@@ -6,10 +6,12 @@
  */
 
 import { useState } from 'react'
+import type { KeyboardEvent } from 'react'
 import type { InjectFace, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import { IconChevronDownOutline14 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { HttpProxyCardFace } from './card-controller.js'
 import type {} from './slot-contract.js'
+import { normalizeHostEntry } from '../hosts.js'
 import css from './card.module.css'
 
 /** Props the renderer binds for the http-proxy card. */
@@ -49,7 +51,8 @@ function ValueField(props: {
 /**
  * A hostname field that doubles as a combobox: it stays free text, but focus
  * (or a chevron) opens a dropdown of known model hostnames to pick from,
- * styled like the host's own menus rather than a browser dialog.
+ * styled like the host's own menus rather than a browser dialog. Arrow keys
+ * move the highlight, Enter picks, Escape closes.
  */
 function HostField(props: {
   id: string
@@ -62,27 +65,72 @@ function HostField(props: {
   onEdit: (text: string) => void
 }) {
   const [open, setOpen] = useState(false)
-  const present = new Set(props.value.split(/[,\s]+/).filter(Boolean))
+  const [highlight, setHighlight] = useState(0)
+  // Already-committed hostnames, normalized the same way the Host half routes,
+  // so a casing/port/URL variant of a saved host never shows as "new".
+  const present = new Set(
+    props.value.split(/[,\s]+/).map(token => normalizeHostEntry(token)).filter((h): h is string => h !== undefined),
+  )
   // The token being typed right now: whatever follows the last separator.
   const tail = /[^,\s]*$/.exec(props.value)?.[0] ?? ''
   const options = props.suggestions.filter(host =>
     !present.has(host)
-    && (tail === '' || host.toLowerCase().includes(tail.toLowerCase())),
+    && (tail === '' || host.includes(tail.toLowerCase())),
   )
+  const active = open && highlight >= 0 && highlight < options.length ? highlight : -1
 
   const add = (host: string): void => {
     if (props.disabled) return
     const parts = props.value.trim() === '' ? [] : props.value.trim().split(/[,\s]+/).filter(Boolean)
+    // The text ends right after a separator: every token is committed and
+    // nothing is being typed, so the pick always appends — a committed custom
+    // host is never clobbered.
+    const hasDraft = !/[,\s]$/.test(props.value)
     const last = parts[parts.length - 1]
-    // A trailing token that is not a known hostname is the draft being typed,
-    // so picking a suggestion replaces it; a complete entry is kept and appended after.
-    const committed = new Set([...props.suggestions, ...parts.slice(0, -1)])
-    const base = last !== undefined && !committed.has(last) ? parts.slice(0, -1) : parts
-    if (!base.includes(host)) {
+    const committed = new Set<string>()
+    for (const token of [...props.suggestions, ...parts.slice(0, -1)]) {
+      const normalized = normalizeHostEntry(token)
+      if (normalized !== undefined) committed.add(normalized)
+    }
+    const draft = hasDraft && last !== undefined && !committed.has(normalizeHostEntry(last) ?? '')
+      ? last
+      : undefined
+    const base = draft === undefined ? parts : parts.slice(0, -1)
+    if (!base.some(token => normalizeHostEntry(token) === host)) {
       props.onEdit(base.length === 0 ? host : `${base.join(', ')}${', '}${host}`)
     }
-    // Keep the panel open so several hosts can be picked in a row; the just-picked
-    // host leaves `options` on the next render and the panel closes on blur/Escape.
+    // Keep the panel open so several hosts can be picked in a row; the
+    // just-picked host leaves `options` on the next render.
+    setHighlight(0)
+  }
+
+  const move = (delta: number): void => {
+    if (options.length === 0) return
+    setHighlight(current => (current + delta + options.length) % options.length)
+  }
+
+  const onKeyDown = (event: KeyboardEvent<HTMLInputElement>): void => {
+    if (event.key === 'Escape') { setOpen(false); return }
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      if (!open) { setOpen(true); setHighlight(0); return }
+      move(1)
+      return
+    }
+    if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      if (!open) { setOpen(true); setHighlight(options.length - 1); return }
+      move(-1)
+      return
+    }
+    if (event.key === 'Enter' && open && options.length > 0) {
+      event.preventDefault()
+      const pick = options[active >= 0 ? active : 0]
+      if (pick !== undefined) add(pick)
+      return
+    }
+    if (event.key === 'Home' && open) { event.preventDefault(); setHighlight(0); return }
+    if (event.key === 'End' && open) { event.preventDefault(); setHighlight(options.length - 1); return }
   }
 
   return (
@@ -104,12 +152,13 @@ function HostField(props: {
           aria-expanded={open}
           aria-controls={`${props.id}-list`}
           aria-autocomplete="list"
+          aria-activedescendant={active >= 0 ? `${props.id}-opt-${active}` : undefined}
           value={props.value}
           placeholder={props.placeholder}
           disabled={props.disabled}
-          onFocus={() => { setOpen(true) }}
-          onChange={(event) => { props.onEdit(event.target.value); setOpen(true) }}
-          onKeyDown={(event) => { if (event.key === 'Escape') setOpen(false) }}
+          onFocus={() => { setOpen(true); setHighlight(0) }}
+          onChange={(event) => { props.onEdit(event.target.value); setOpen(true); setHighlight(0) }}
+          onKeyDown={onKeyDown}
         />
         <button
           type="button"
@@ -119,7 +168,11 @@ function HostField(props: {
           tabIndex={-1}
           disabled={props.disabled}
           onMouseDown={(event) => { event.preventDefault() }}
-          onClick={() => { setOpen(!open) }}
+          onClick={() => {
+            const next = !open
+            setOpen(next)
+            if (next) setHighlight(0)
+          }}
         >
           <IconChevronDownOutline14 className={open ? css.comboChevronOpen : undefined} />
         </button>
@@ -127,8 +180,14 @@ function HostField(props: {
           ? (
             <ul className={css.comboList} id={`${props.id}-list`} role="listbox">
               {options.length > 0
-                ? options.map(host => (
-                  <li key={host} role="option" aria-selected={false}>
+                ? options.map((host, index) => (
+                  <li
+                    key={host}
+                    role="option"
+                    id={`${props.id}-opt-${index}`}
+                    aria-selected={index === active}
+                    onMouseEnter={() => { setHighlight(index) }}
+                  >
                     <button
                       type="button"
                       className={css.comboItem}
@@ -191,7 +250,7 @@ export function HttpProxyCard(props: HttpProxyCardProps) {
             <HostField
               id="http-proxy-hosts"
               label="只代理这些域名"
-              hint="留空 = 自动代理所有模型域名；填写 = 只代理列出的这些域名（逗号分隔，可从下拉选择）。"
+              hint="留空 = 自动代理所有模型域名；填写 = 只代理列出的这些域名（逗号分隔，支持域名 / 域名:端口 / URL，可从下拉选择）。"
               placeholder="gateway.acme.example"
               value={state.proxyHosts}
               suggestions={state.suggestions}
@@ -201,7 +260,7 @@ export function HttpProxyCard(props: HttpProxyCardProps) {
             <HostField
               id="http-proxy-exclude"
               label="排除域名"
-              hint="永远不走代理，优先级最高（逗号分隔，可选，可从下拉选择）。"
+              hint="永远不走代理，优先级最高（逗号分隔，支持域名 / 域名:端口 / URL，可从下拉选择）。"
               placeholder="api.deepseek.com"
               value={state.excludeHosts}
               suggestions={state.suggestions}

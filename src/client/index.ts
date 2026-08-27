@@ -31,6 +31,9 @@ export function apply(ctx: ClientContext): void {
     ctx.settingsScope.bind({ namespace: NS }),
     ctx.settingsScope.bind({ namespace: PI_AI_NS }),
   )
+  // Unsubscribe both scopes when this fiber disposes (unload / HMR), so the
+  // orphaned controller cannot keep publishing after the card is gone.
+  ctx.effect(() => () => controller.dispose())
   ctx.slots.inject('settings.plugin.item', function* () {
     yield ctx.slots.register({
       name: 'settings.plugin.item',

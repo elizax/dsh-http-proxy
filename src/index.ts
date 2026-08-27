@@ -12,12 +12,12 @@ import type { Context } from '@deepseek-ai/cordis'
 import { installSettingsSection, settingsNamespace } from '@deepseek-ai/dsh-settings'
 import { assertValid, Config } from './config.js'
 import type { Config as PluginConfig } from './config.js'
-import { createProxyFetch, createRoutingFetch, hostnameOf } from './proxy.js'
+import { createProxyFetch, createRoutingFetch, hostnameOf, normalizeHostEntry } from './proxy.js'
 import type { ProxyFetch } from './proxy.js'
 
 export { Config, assertValid, SUPPORTED_PROXY_SCHEMES } from './config.js'
 export type { Config as PluginConfig } from './config.js'
-export { createProxyFetch, createRoutingFetch, hostnameOf, shouldProxy, urlOf } from './proxy.js'
+export { createProxyFetch, createRoutingFetch, hostnameOf, normalizeHostEntry, shouldProxy, urlOf } from './proxy.js'
 export type { ProxyFetch } from './proxy.js'
 
 /** Plugin short name (also its settings namespace). */
@@ -49,9 +49,12 @@ interface PiAiSection {
 function collectProxyHosts(ctx: Context, config: PluginConfig): Set<string> {
   const hosts = new Set<string>()
   if (config.proxyHosts.length > 0) {
-    // Explicit mode: only the listed hosts are proxied.
+    // Explicit mode: only the listed hosts are proxied. Entries are normalized
+    // to bare lowercase hostnames so mixed case, `host:port`, or pasted URLs
+    // still match the hostname `shouldProxy` compares requests against.
     for (const host of config.proxyHosts) {
-      if (host.length > 0) hosts.add(host)
+      const normalized = normalizeHostEntry(host)
+      if (normalized !== undefined) hosts.add(normalized)
     }
   } else {
     // Auto mode: every model-API host DSH knows about.
@@ -77,11 +80,21 @@ function collectProxyHosts(ctx: Context, config: PluginConfig): Set<string> {
       }
     }
   }
-  // Exclusions always win, in either mode.
+  // Exclusions always win, in either mode — normalized the same way.
   for (const host of config.excludeHosts) {
-    if (host.length > 0) hosts.delete(host)
+    const normalized = normalizeHostEntry(host)
+    if (normalized !== undefined) hosts.delete(normalized)
   }
   return hosts
+}
+
+/** Whether two hostname sets hold the same hosts (sets are small; order-free compare). */
+function sameHostSet(left: ReadonlySet<string>, right: ReadonlySet<string>): boolean {
+  if (left.size !== right.size) return false
+  for (const host of left) {
+    if (!right.has(host)) return false
+  }
+  return true
 }
 
 /**
@@ -94,17 +107,22 @@ function collectProxyHosts(ctx: Context, config: PluginConfig): Set<string> {
 export function apply(ctx: Context, config: PluginConfig): void {
   let current: () => PluginConfig = () => config
   const originalFetch = globalThis.fetch
-  let active: ProxyFetch | undefined
+  /** The active routing wrapper plus the config it was built from. */
+  let active: { proxyUrl: string; hosts: Set<string>; entry: ProxyFetch } | undefined
+  let disposed = false
 
   const deactivate = (): void => {
     if (active === undefined) return
+    // Restore the platform fetch first, so no request can land on a closing
+    // dispatcher after this point.
     globalThis.fetch = originalFetch
-    const entry = active
+    const entry = active.entry
     active = undefined
-    void entry.close()
+    void entry.close().catch(() => { /* a closed dispatcher is the goal */ })
   }
 
   const refresh = (): void => {
+    if (disposed) return
     const cfg = current()
     // Settings `proxy` wins; the `DSH_HTTP_PROXY` environment variable is the
     // no-file fallback so a deployment can set the proxy without editing settings.
@@ -113,19 +131,34 @@ export function apply(ctx: Context, config: PluginConfig): void {
       deactivate()
       return
     }
-    if (active !== undefined) {
-      const previous = active
-      active = undefined
-      void previous.close()
-    }
     const hosts = collectProxyHosts(ctx, cfg)
+    // No config actually moved: keep the current dispatcher and wrapper, so an
+    // unrelated settings save never tears down in-flight proxy connections.
+    if (active !== undefined && active.proxyUrl === proxyUrl && sameHostSet(active.hosts, hosts)) return
     const entry = createProxyFetch(proxyUrl)
-    active = entry
+    const next = { proxyUrl, hosts, entry }
+    const previous = active
+    active = next
     globalThis.fetch = createRoutingFetch(entry.fetch, originalFetch, hosts)
+    // Publish the new wrapper before closing the old dispatcher, so requests
+    // started after this point always land on the live dispatcher.
+    if (previous !== undefined) {
+      void previous.entry.close().catch(() => { /* replaced by a newer wrapper */ })
+    }
   }
 
   refresh()
-  ctx.effect(() => () => deactivate())
+  ctx.effect(() => () => {
+    disposed = true
+    deactivate()
+  })
+
+  // The proxied host set depends on the `llm-pi-ai` gateways, which this
+  // plugin does not own. Recompute on any committed settings change so a new
+  // or renamed gateway is proxied without a restart (no-op when nothing moved).
+  ctx.on('settings/updated', (ns: unknown) => {
+    if (String(ns) === 'llm-pi-ai') refresh()
+  })
 
   installSettingsSection(ctx, NS, Config, config, {
     setSource: (source) => {

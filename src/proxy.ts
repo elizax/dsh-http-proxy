@@ -10,11 +10,9 @@
  */
 
 import { ProxyAgent, fetch as undiciFetch } from 'undici'
+import { hostnameOf } from './hosts.js'
 
-/** Extract the hostname from an absolute URL string or `URL`. */
-export function hostnameOf(value: string | URL): string {
-  return value instanceof URL ? value.hostname : new URL(value).hostname
-}
+export { hostnameOf, normalizeHostEntry } from './hosts.js'
 
 /** Extract the absolute URL string from a `fetch` input. */
 export function urlOf(input: string | URL | Request): string {

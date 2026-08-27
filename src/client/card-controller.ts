@@ -11,6 +11,7 @@
 
 import type { SettingsScope, SettingsScopeSnapshot, SnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-runtime/client'
+import { hostnameOf, normalizeHostEntry } from '../hosts.js'
 
 /** The `http-proxy` section fields this card edits. */
 export interface HttpProxySettings {
@@ -67,15 +68,11 @@ export interface HttpProxyCardFace {
   save: () => void
 }
 
-/** Extract the hostname from an absolute URL string; throws on malformed input. */
-function hostnameOf(value: string): string {
-  return new URL(value).hostname
-}
-
 /** Bridges the `http-proxy` scope onto the card with a minimal staged form. */
 export class HttpProxyCardController {
   private readonly store: SnapshotStore<HttpProxyCardState>
   private readonly staged = new Map<FieldName, string>()
+  private readonly disposers: Array<() => void> = []
   private saving = false
   private saved = false
   private failed = false
@@ -89,8 +86,19 @@ export class HttpProxyCardController {
     private readonly known: SettingsScope<PiAiSettings>,
   ) {
     this.store = createSnapshotStore(this.projection())
-    scope.subscribe(() => this.publish())
-    known.subscribe(() => this.publish())
+    this.disposers.push(
+      scope.subscribe(() => this.publish()),
+      known.subscribe(() => this.publish()),
+    )
+  }
+
+  /** Stop observing both scopes and drop the staged drafts. Idempotent. */
+  dispose(): void {
+    for (const disposer of this.disposers.splice(0)) disposer()
+    this.staged.clear()
+    this.saving = false
+    this.saved = false
+    this.failed = false
   }
 
   private snapshot(): SettingsScopeSnapshot<HttpProxySettings> {
@@ -104,7 +112,12 @@ export class HttpProxyCardController {
     const addList = (list: string[] | undefined): void => {
       if (!Array.isArray(list)) return
       for (const host of list) {
-        if (typeof host === 'string' && host.length > 0) hosts.add(host)
+        // Normalize exactly like the Host half's routing, so the dropdown
+        // never offers a casing/port variant of a host that is already saved.
+        if (typeof host === 'string') {
+          const normalized = normalizeHostEntry(host)
+          if (normalized !== undefined) hosts.add(normalized)
+        }
       }
     }
     addList(value.proxyHosts)

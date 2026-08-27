@@ -8,8 +8,7 @@
  * on the direct path.
  * @module dsh-http-proxy/proxy
  */
-/** Extract the hostname from an absolute URL string or `URL`. */
-export declare function hostnameOf(value: string | URL): string;
+export { hostnameOf, normalizeHostEntry } from './hosts.js';
 /** Extract the absolute URL string from a `fetch` input. */
 export declare function urlOf(input: string | URL | Request): string;
 /** Whether a URL's hostname is in the proxied set. Malformed URLs are never proxied. */

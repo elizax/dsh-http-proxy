@@ -66,6 +66,7 @@ export declare class HttpProxyCardController {
     private readonly known;
     private readonly store;
     private readonly staged;
+    private readonly disposers;
     private saving;
     private saved;
     private failed;
@@ -74,6 +75,8 @@ export declare class HttpProxyCardController {
      * @param known - the bound read-only `llm-pi-ai` scope that supplies gateway hostnames.
      */
     constructor(scope: SettingsScope<HttpProxySettings>, known: SettingsScope<PiAiSettings>);
+    /** Stop observing both scopes and drop the staged drafts. Idempotent. */
+    dispose(): void;
     private snapshot;
     /** Hostnames offered by the host fields: the default DeepSeek host, every configured gateway, and what is already saved. */
     private suggestions;
