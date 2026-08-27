@@ -16,10 +16,16 @@
 ## 安装（一条命令）
 
 ```bash
+dsh plugin --profile web add dsh-http-proxy
+```
+
+`web` 是 profile 名，换成你自己的 profile 名（如 `headless`）。包已发布到 npm 并自动同步 CNPM 镜像；也可以直接从 GitHub 安装源码版：
+
+```bash
 dsh plugin --profile web add github:elizax/dsh-http-proxy
 ```
 
-`web` 是 profile 名，换成你自己的 profile 名（如 `headless`）。仓库里已带构建好的 `lib/`，安装时无需编译。
+仓库里已带构建好的 `lib/`，两种安装方式都无需编译。
 
 ## 重启
 

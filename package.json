@@ -3,6 +3,24 @@
   "description": "Route DeepSeek Harness model-API requests through an HTTP/SOCKS proxy without modifying Harness source",
   "version": "0.1.0",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/elizax/dsh-http-proxy.git"
+  },
+  "homepage": "https://github.com/elizax/dsh-http-proxy",
+  "bugs": {
+    "url": "https://github.com/elizax/dsh-http-proxy/issues"
+  },
+  "keywords": [
+    "deepseek",
+    "harness",
+    "dsh",
+    "proxy",
+    "http-proxy",
+    "socks",
+    "cordis",
+    "plugin"
+  ],
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/types/index.d.ts",
@@ -26,6 +44,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "node -e \"require('node:fs').rmSync('lib',{recursive:true,force:true})\" && tsc -p tsconfig.build.json && tsdown",
+    "prepublishOnly": "pnpm build",
     "typecheck": "tsc --noEmit"
   },
   "dsh": {
