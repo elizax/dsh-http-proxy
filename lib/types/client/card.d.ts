@@ -1,6 +1,8 @@
 /**
- * The http-proxy settings card: a proxy URL plus optional extra hostnames,
- * staged and written on save through the `http-proxy` settings scope.
+ * The http-proxy settings card: a header naming the plugin, disclosing its
+ * controls in place — the same collapse/expand chrome the host's own plugin
+ * cards use (PluginCard + ValueField). Fields stage drafts and write only on
+ * save through the `http-proxy` settings scope.
  */
 import type { InjectFace, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots';
 import type { HttpProxyCardFace } from './card-controller.js';
