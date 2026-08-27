@@ -26,8 +26,6 @@ function ValueField(props: {
   value: string
   disabled: boolean
   onEdit: (text: string) => void
-  /** Optional datalist id: offers suggestions while still allowing free text. */
-  list?: string
 }) {
   return (
     <div className={css.field}>
@@ -41,9 +39,111 @@ function ValueField(props: {
         value={props.value}
         placeholder={props.placeholder}
         disabled={props.disabled}
-        list={props.list}
         onChange={(event) => { props.onEdit(event.target.value) }}
       />
+      <p className={css.hint}>{props.hint}</p>
+    </div>
+  )
+}
+
+/**
+ * A hostname field that doubles as a combobox: it stays free text, but focus
+ * (or a chevron) opens a dropdown of known model hostnames to pick from,
+ * styled like the host's own menus rather than a browser dialog.
+ */
+function HostField(props: {
+  id: string
+  label: string
+  hint: string
+  placeholder: string
+  value: string
+  suggestions: string[]
+  disabled: boolean
+  onEdit: (text: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const present = new Set(props.value.split(/[,\s]+/).filter(Boolean))
+  // The token being typed right now: whatever follows the last separator.
+  const tail = /[^,\s]*$/.exec(props.value)?.[0] ?? ''
+  const options = props.suggestions.filter(host =>
+    !present.has(host)
+    && (tail === '' || host.toLowerCase().includes(tail.toLowerCase())),
+  )
+
+  const add = (host: string): void => {
+    if (props.disabled) return
+    const parts = props.value.trim() === '' ? [] : props.value.trim().split(/[,\s]+/).filter(Boolean)
+    const last = parts[parts.length - 1]
+    // A trailing token that is not a known hostname is the draft being typed,
+    // so picking a suggestion replaces it; a complete entry is kept and appended after.
+    const committed = new Set([...props.suggestions, ...parts.slice(0, -1)])
+    const base = last !== undefined && !committed.has(last) ? parts.slice(0, -1) : parts
+    if (!base.includes(host)) {
+      props.onEdit(base.length === 0 ? host : `${base.join(', ')}${', '}${host}`)
+    }
+    // Keep the panel open so several hosts can be picked in a row; the just-picked
+    // host leaves `options` on the next render and the panel closes on blur/Escape.
+  }
+
+  return (
+    <div className={css.field}>
+      <div className={css.head}>
+        <label className={css.label} htmlFor={props.id}>{props.label}</label>
+      </div>
+      <div
+        className={css.combo}
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false)
+        }}
+      >
+        <input
+          id={props.id}
+          className={`${css.input} ${css.comboInput}`}
+          type="text"
+          role="combobox"
+          aria-expanded={open}
+          aria-controls={`${props.id}-list`}
+          aria-autocomplete="list"
+          value={props.value}
+          placeholder={props.placeholder}
+          disabled={props.disabled}
+          onFocus={() => { setOpen(true) }}
+          onChange={(event) => { props.onEdit(event.target.value); setOpen(true) }}
+          onKeyDown={(event) => { if (event.key === 'Escape') setOpen(false) }}
+        />
+        <button
+          type="button"
+          className={css.comboChevron}
+          aria-label="选择域名"
+          aria-expanded={open}
+          tabIndex={-1}
+          disabled={props.disabled}
+          onMouseDown={(event) => { event.preventDefault() }}
+          onClick={() => { setOpen(!open) }}
+        >
+          <IconChevronDownOutline14 className={open ? css.comboChevronOpen : undefined} />
+        </button>
+        {open
+          ? (
+            <ul className={css.comboList} id={`${props.id}-list`} role="listbox">
+              {options.length > 0
+                ? options.map(host => (
+                  <li key={host} role="option" aria-selected={false}>
+                    <button
+                      type="button"
+                      className={css.comboItem}
+                      onMouseDown={(event) => { event.preventDefault() }}
+                      onClick={() => { add(host) }}
+                    >
+                      {host}
+                    </button>
+                  </li>
+                ))
+                : <li className={css.comboEmpty}>无更多可选域名</li>}
+            </ul>
+          )
+          : null}
+      </div>
       <p className={css.hint}>{props.hint}</p>
     </div>
   )
@@ -79,9 +179,6 @@ export function HttpProxyCard(props: HttpProxyCardProps) {
         ? (
           <div className={css.body}>
             {!state.writable ? <p className={css.readOnly} role="status">本部署的设置为只读。</p> : null}
-            <datalist id="http-proxy-model-hosts">
-              {state.suggestions.map(host => <option key={host} value={host} />)}
-            </datalist>
             <ValueField
               id="http-proxy-url"
               label="代理地址"
@@ -91,24 +188,24 @@ export function HttpProxyCard(props: HttpProxyCardProps) {
               disabled={disabled}
               onEdit={text => { props.edit('proxy', text) }}
             />
-            <ValueField
+            <HostField
               id="http-proxy-hosts"
               label="只代理这些域名"
               hint="留空 = 自动代理所有模型域名；填写 = 只代理列出的这些域名（逗号分隔，可从下拉选择）。"
               placeholder="gateway.acme.example"
               value={state.proxyHosts}
+              suggestions={state.suggestions}
               disabled={disabled}
-              list="http-proxy-model-hosts"
               onEdit={text => { props.edit('proxyHosts', text) }}
             />
-            <ValueField
+            <HostField
               id="http-proxy-exclude"
               label="排除域名"
               hint="永远不走代理，优先级最高（逗号分隔，可选，可从下拉选择）。"
               placeholder="api.deepseek.com"
               value={state.excludeHosts}
+              suggestions={state.suggestions}
               disabled={disabled}
-              list="http-proxy-model-hosts"
               onEdit={text => { props.edit('excludeHosts', text) }}
             />
             <div className={css.footer}>

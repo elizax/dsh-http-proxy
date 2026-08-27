@@ -177,6 +177,97 @@
   color: var(--dsw-alias-label-error);
 }
 
+/* Host combobox: a free-text input whose dropdown lists known model hostnames.
+ * The panel mirrors the host Menu surface (r12, inverted hairline, shadow-lv3,
+ * 4px inset, hover fill) so it reads as native rather than a browser dialog. */
+.combo {
+  position: relative;
+}
+
+.comboInput {
+  padding-right: 30px;
+}
+
+.comboChevron {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--dsw-alias-label-tertiary);
+  cursor: pointer;
+}
+
+.comboChevron svg {
+  transition: transform 0.16s;
+}
+
+.comboChevronOpen {
+  transform: rotate(180deg);
+}
+
+.comboChevron:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.comboList {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 100;
+  box-sizing: border-box;
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  list-style: none;
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid var(--dsw-alias-border-inverted);
+  border-radius: 12px;
+  background: var(--dsw-specific-menu);
+  box-shadow: var(--dsw-shadow-lv3);
+  --dsh-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
+  --dsh-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
+}
+
+.comboItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 32px;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--dsw-alias-label-primary);
+  text-align: left;
+}
+
+.comboItem:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.comboEmpty {
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--dsw-alias-label-tertiary);
+}
+
 .save {
   appearance: none;
   border: 1px solid transparent;
