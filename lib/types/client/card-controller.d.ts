@@ -8,7 +8,8 @@
  * validator remains the authority on what lands; a save that did not land keeps
  * its drafts so the user can correct them.
  */
-import type { SettingsScope, SnapshotStore } from '@deepseek-ai/dsh-client-runtime/client';
+import type { SettingsScope } from '@deepseek-ai/dsh-client-ui-settings/client';
+import type { SnapshotStore } from '@deepseek-ai/dsh-client-store';
 /** The `http-proxy` section fields this card edits. */
 export interface HttpProxySettings {
     /** Proxy URL (http/https/socks4/socks4a/socks5/socks5h); empty = inactive. */

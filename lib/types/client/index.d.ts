@@ -4,7 +4,7 @@
  * same `http-proxy` namespace; the tab pairs the two without learning what the
  * namespace means.
  */
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client';
+import type { Context as ClientContext } from '@deepseek-ai/cordis';
 /** Required services (cordis fiber inject). */
 export declare const inject: string[];
 /**

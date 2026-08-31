@@ -52,30 +52,33 @@
       "patch": "./cordis.patch.yml"
     },
     "client": {
-      "platform": "web",
-      "external": [
-        "@deepseek-ai/dsh-client-runtime/client"
-      ]
+      "platform": "web"
     }
   },
   "peerDependencies": {
-    "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/dsh-client-runtime": "^0.1.0-rc.8",
-    "@deepseek-ai/dsh-client-ui-settings": "^0.1.0-rc.8",
-    "@deepseek-ai/dsh-client-ui-slots": "^0.1.0-rc.8",
-    "@deepseek-ai/dsh-settings": "^0.1.0-rc.8",
+    "@deepseek-ai/cordis": "^4.0.2",
+    "@deepseek-ai/dsh-client-store": ">=0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-settings": ">=0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-renderer": ">=0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-slots": ">=0.1.2-alpha.2",
+    "@deepseek-ai/dsh-settings": ">=0.1.2-alpha.2",
     "react": "^18.2.0"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": "^3.18.1",
+    "@deepseek-ai/schemastery": "^3.18.2",
     "undici": "^7.28.0"
   },
   "devDependencies": {
-    "@deepseek-ai/cordis": "^4.0.1",
-    "@deepseek-ai/dsh-client-runtime": "0.1.1-rc.1",
-    "@deepseek-ai/dsh-client-ui-settings": "0.1.1-rc.1",
-    "@deepseek-ai/dsh-client-ui-slots": "0.1.1-rc.1",
-    "@deepseek-ai/dsh-settings": ">=0.1.1-rc.2",
+    "@deepseek-ai/cordis": "^4.0.2",
+    "@deepseek-ai/dsh-brand": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-store": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-settings": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-renderer": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-ui-slots": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-invariants": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-scope": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-session": "0.1.2-alpha.2",
+    "@deepseek-ai/dsh-settings": "0.1.2-alpha.2",
     "@types/node": "^22.0.0",
     "@types/react": "~18.3.1",
     "lightningcss": "^1.33.0",

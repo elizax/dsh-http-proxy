@@ -27,6 +27,8 @@ dsh plugin --profile web add github:elizax/dsh-http-proxy
 
 仓库里已带构建好的 `lib/`，两种安装方式都无需编译。
 
+> **兼容性**：需要 DSH ≥ **0.1.2-alpha.2**（0.1.2 起客户端包做了拆分重组）。更早的 DSH 版本请改用本仓库更早的提交。
+
 ## 重启
 
 ```bash

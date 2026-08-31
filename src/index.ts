@@ -9,7 +9,9 @@
  */
 
 import type { Context } from '@deepseek-ai/cordis'
-import { installSettingsSection, settingsNamespace } from '@deepseek-ai/dsh-settings'
+// Type-only: pulls in the `Context.settings` augmentation without importing a
+// value, so the module's named exports are not part of this module's link step.
+import type {} from '@deepseek-ai/dsh-settings'
 import { assertValid, Config } from './config.js'
 import type { Config as PluginConfig } from './config.js'
 import { createProxyFetch, createRoutingFetch, hostnameOf, normalizeHostEntry } from './proxy.js'
@@ -23,7 +25,7 @@ export type { ProxyFetch } from './proxy.js'
 /** Plugin short name (also its settings namespace). */
 export const name = 'http-proxy'
 
-const NS = settingsNamespace('http-proxy')
+const NS = 'http-proxy'
 
 /** The official DeepSeek adapter's default endpoint host. */
 const DEFAULT_DEEPSEEK_HOST = 'api.deepseek.com'
@@ -175,11 +177,16 @@ export function apply(ctx: Context, config: PluginConfig): void {
     if (String(ns) === 'llm-pi-ai') refresh()
   })
 
-  installSettingsSection(ctx, NS, Config, config, {
-    setSource: (source) => {
-      current = source
-    },
-    onChange: refresh,
-    validate: assertValid,
+  // Scoped to the settings seam rather than injected outright: the plugin must
+  // keep routing with its composition entry when no provider is present, and
+  // `installSection` restores that entry itself if the provider detaches.
+  ctx.inject(['settings'], (settingsCtx) => {
+    settingsCtx.settings.installSection(ctx, NS, Config, config, {
+      setSource: (source) => {
+        current = source
+      },
+      onChange: refresh,
+      validate: assertValid,
+    })
   })
 }

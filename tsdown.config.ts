@@ -18,16 +18,16 @@ import { basename, dirname, resolve as resolvePath } from 'node:path'
 import type { UserConfig } from 'tsdown'
 import { transform } from 'lightningcss'
 
-/** Module specifiers the shell shares into the frozen module table (the official PLATFORM_MODULES + preloaded runtime client). */
+/** Module specifiers the shell shares into the frozen module table (the official PLATFORM_MODULES). */
 const CLIENT_EXTERNALS = [
   'react',
   'react/jsx-runtime',
   'react-dom',
   'react-dom/client',
   '@deepseek-ai/cordis',
+  '@deepseek-ai/dsh-client-store',
   '@deepseek-ai/dsh-client-ui-slots',
   '@deepseek-ai/dsh-client-ui-primitives',
-  '@deepseek-ai/dsh-client-runtime/client',
 ]
 
 /**
