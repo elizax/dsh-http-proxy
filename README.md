@@ -18,12 +18,12 @@
 > **⚠️ 请用带版本号的命令安装**：pnpm ≥ 10 的 `minimumReleaseAge` 策略会暂时跳过刚发布的新版本，不带版本号安装可能解析到旧版（旧版不兼容新版 DSH，启动会报错）。**显式指定版本号可绕过该策略。**
 
 ```bash
-dsh plugin --profile web add dsh-http-proxy@0.1.1
+dsh plugin --profile web add dsh-http-proxy@0.1.2
 ```
 
 `web` 是 profile 名，换成你自己的 profile 名（如 `headless`）。
 
-**想装最新版？** 先查最新版本号，把命令里的 `0.1.1` 换成它：
+**想装最新版？** 先查最新版本号，把命令里的 `0.1.2` 换成它：
 
 ```bash
 npm view dsh-http-proxy version
