@@ -15,17 +15,29 @@
 
 ## 安装（一条命令）
 
+> **⚠️ 请用带版本号的命令安装**：pnpm ≥ 10 的 `minimumReleaseAge` 策略会暂时跳过刚发布的新版本，不带版本号安装可能解析到旧版（旧版不兼容新版 DSH，启动会报错）。**显式指定版本号可绕过该策略。**
+
 ```bash
-dsh plugin --profile web add dsh-http-proxy
+dsh plugin --profile web add dsh-http-proxy@0.1.1
 ```
 
-`web` 是 profile 名，换成你自己的 profile 名（如 `headless`）。包已发布到 npm 并自动同步 CNPM 镜像；也可以直接从 GitHub 安装源码版：
+`web` 是 profile 名，换成你自己的 profile 名（如 `headless`）。
+
+**想装最新版？** 先查最新版本号，把命令里的 `0.1.1` 换成它：
+
+```bash
+npm view dsh-http-proxy version
+```
+
+然后执行 `dsh plugin --profile web add dsh-http-proxy@<最新版本号>`。
+
+**升级已装的插件**：用插件市场（dshmarket）的更新功能，或直接用新版本号重新执行上面的安装命令。装不上指定版本（比如镜像同步有延迟）时，稍等片刻重试即可。
+
+**备选：从 GitHub 装源码版**（始终是最新代码，无需编译，但需要能访问 GitHub）：
 
 ```bash
 dsh plugin --profile web add github:elizax/dsh-http-proxy
 ```
-
-仓库里已带构建好的 `lib/`，两种安装方式都无需编译。
 
 > **兼容性**：需要 DSH ≥ **0.1.2-alpha.2**（0.1.2 起客户端包做了拆分重组）。更早的 DSH 版本请改用本仓库更早的提交。
 
