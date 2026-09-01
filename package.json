@@ -1,7 +1,7 @@
 {
   "name": "dsh-http-proxy",
   "description": "Route DeepSeek Harness model-API requests through an HTTP/SOCKS proxy without modifying Harness source",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "license": "MIT",
   "repository": {
     "type": "git",
