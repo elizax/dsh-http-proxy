@@ -12,7 +12,13 @@
 import type { SettingsScope, SettingsScopeSnapshot } from '@deepseek-ai/dsh-client-ui-settings/client'
 import type { SnapshotStore } from '@deepseek-ai/dsh-client-store'
 import { createSnapshotStore } from '@deepseek-ai/dsh-client-store'
-import { hostnameOf, normalizeHostEntry } from '../hosts.js'
+import {
+  DEFAULT_DEEPSEEK_HOST,
+  DEFAULT_MODEL_HOST_SUFFIXES,
+  DEFAULT_MODEL_HOSTS,
+  hostnameOf,
+  normalizeHostEntry,
+} from '../hosts.js'
 
 /** The `http-proxy` section fields this card edits. */
 export interface HttpProxySettings {
@@ -31,9 +37,6 @@ export interface PiAiSettings {
 
 /** One editable field of the card. */
 type FieldName = 'proxy' | 'proxyHosts' | 'excludeHosts'
-
-/** The official DeepSeek adapter's default endpoint host; keep in sync with src/index.ts. */
-const DEFAULT_DEEPSEEK_HOST = 'api.deepseek.com'
 
 /** What the http-proxy card renders. */
 export interface HttpProxyCardState {
@@ -106,9 +109,17 @@ export class HttpProxyCardController {
     return this.scope.getSnapshot()
   }
 
-  /** Hostnames offered by the host fields: the default DeepSeek host, every configured gateway, and what is already saved. */
+  /**
+   * Hostnames offered by the host fields: the default DeepSeek host, the
+   * built-in pi-ai catalog endpoints, every configured gateway, and what is
+   * already saved.
+   */
   private suggestions(): string[] {
-    const hosts = new Set<string>([DEFAULT_DEEPSEEK_HOST])
+    const hosts = new Set<string>([
+      DEFAULT_DEEPSEEK_HOST,
+      ...DEFAULT_MODEL_HOSTS,
+      ...DEFAULT_MODEL_HOST_SUFFIXES,
+    ])
     const value = this.snapshot().value ?? {}
     const addList = (list: string[] | undefined): void => {
       if (!Array.isArray(list)) return

@@ -12,7 +12,13 @@
 import { ProxyAgent, fetch as undiciFetch } from 'undici'
 import { hostnameOf } from './hosts.js'
 
-export { hostnameOf, normalizeHostEntry } from './hosts.js'
+export {
+  DEFAULT_DEEPSEEK_HOST,
+  DEFAULT_MODEL_HOST_SUFFIXES,
+  DEFAULT_MODEL_HOSTS,
+  hostnameOf,
+  normalizeHostEntry,
+} from './hosts.js'
 
 /** Extract the absolute URL string from a `fetch` input. */
 export function urlOf(input: string | URL | Request): string {
@@ -21,10 +27,26 @@ export function urlOf(input: string | URL | Request): string {
   return input.url
 }
 
-/** Whether a URL's hostname is in the proxied set. Malformed URLs are never proxied. */
+/**
+ * Whether a URL's hostname is in the proxied set. Entries are normalized
+ * hostnames; one starting with `.` is a suffix that matches the bare domain
+ * and every host built on it — a subdomain (`api.example.com`) or a
+ * hyphen-joined region host (`us-central1-aiplatform.googleapis.com`, the
+ * shape `google-vertex` builds from its `{location}` template). Malformed
+ * URLs are never proxied.
+ */
 export function shouldProxy(url: string, hosts: ReadonlySet<string>): boolean {
   try {
-    return hosts.has(new URL(url).hostname)
+    const hostname = new URL(url).hostname
+    if (hosts.has(hostname)) return true
+    for (const entry of hosts) {
+      if (!entry.startsWith('.')) continue
+      const domain = entry.slice(1)
+      if (hostname === domain
+        || hostname.endsWith(`.${domain}`)
+        || hostname.endsWith(`-${domain}`)) return true
+    }
+    return false
   } catch {
     return false
   }

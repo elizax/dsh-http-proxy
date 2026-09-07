@@ -14,21 +14,36 @@ import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-settings'
 import { assertValid, Config } from './config.js'
 import type { Config as PluginConfig } from './config.js'
-import { createProxyFetch, createRoutingFetch, hostnameOf, normalizeHostEntry } from './proxy.js'
+import {
+  DEFAULT_DEEPSEEK_HOST,
+  DEFAULT_MODEL_HOST_SUFFIXES,
+  DEFAULT_MODEL_HOSTS,
+  createProxyFetch,
+  createRoutingFetch,
+  hostnameOf,
+  normalizeHostEntry,
+} from './proxy.js'
 import type { ProxyFetch } from './proxy.js'
 
 export { Config, assertValid, SUPPORTED_PROXY_SCHEMES } from './config.js'
 export type { Config as PluginConfig } from './config.js'
-export { createProxyFetch, createRoutingFetch, hostnameOf, normalizeHostEntry, shouldProxy, urlOf } from './proxy.js'
+export {
+  DEFAULT_DEEPSEEK_HOST,
+  DEFAULT_MODEL_HOST_SUFFIXES,
+  DEFAULT_MODEL_HOSTS,
+  createProxyFetch,
+  createRoutingFetch,
+  hostnameOf,
+  normalizeHostEntry,
+  shouldProxy,
+  urlOf,
+} from './proxy.js'
 export type { ProxyFetch } from './proxy.js'
 
 /** Plugin short name (also its settings namespace). */
 export const name = 'http-proxy'
 
 const NS = 'http-proxy'
-
-/** The official DeepSeek adapter's default endpoint host. */
-const DEFAULT_DEEPSEEK_HOST = 'api.deepseek.com'
 
 /** A settings section, read optionally at request time. */
 interface SettingsLike {
@@ -42,8 +57,10 @@ interface PiAiSection {
 
 /**
  * Collect the hostnames that should travel through the proxy: the official
- * DeepSeek host (or `DEEPSEEK_BASE_URL`), the configured `proxyHosts`, and the
- * custom model gateways declared in the `llm-pi-ai` settings section.
+ * DeepSeek host (or `DEEPSEEK_BASE_URL`), the default endpoints of the
+ * built-in pi-ai providers (catalog routes configure no `baseURL` of their
+ * own), the configured `proxyHosts`, and the custom model gateways declared
+ * in the `llm-pi-ai` settings section.
  * @param ctx - the Cordis context, for the optional settings service.
  * @param config - the plugin config.
  * @returns the proxied hostname set.
@@ -52,8 +69,9 @@ function collectProxyHosts(ctx: Context, config: PluginConfig): Set<string> {
   const hosts = new Set<string>()
   if (config.proxyHosts.length > 0) {
     // Explicit mode: only the listed hosts are proxied. Entries are normalized
-    // to bare lowercase hostnames so mixed case, `host:port`, or pasted URLs
-    // still match the hostname `shouldProxy` compares requests against.
+    // to bare lowercase hostnames (or `.suffix` entries) so mixed case,
+    // `host:port`, pasted URLs, and `*.domain` wildcards still match what
+    // `shouldProxy` compares requests against.
     for (const host of config.proxyHosts) {
       const normalized = normalizeHostEntry(host)
       if (normalized !== undefined) hosts.add(normalized)
@@ -61,6 +79,12 @@ function collectProxyHosts(ctx: Context, config: PluginConfig): Set<string> {
   } else {
     // Auto mode: every model-API host DSH knows about.
     hosts.add(DEFAULT_DEEPSEEK_HOST)
+    // Default endpoints of the installed pi-ai catalog: a catalog route such
+    // as `google-vertex` names no baseURL of its own, so its requests land on
+    // the catalog's endpoint (region-templated for Vertex and Azure, hence
+    // the suffix entries).
+    for (const host of DEFAULT_MODEL_HOSTS) hosts.add(host)
+    for (const suffix of DEFAULT_MODEL_HOST_SUFFIXES) hosts.add(suffix)
     const deepseekBase = process.env.DEEPSEEK_BASE_URL
     if (deepseekBase !== undefined && deepseekBase.length > 0) {
       try {

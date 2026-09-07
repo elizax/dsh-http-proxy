@@ -11,7 +11,7 @@ import type { Context } from '@deepseek-ai/cordis';
 import type { Config as PluginConfig } from './config.js';
 export { Config, assertValid, SUPPORTED_PROXY_SCHEMES } from './config.js';
 export type { Config as PluginConfig } from './config.js';
-export { createProxyFetch, createRoutingFetch, hostnameOf, normalizeHostEntry, shouldProxy, urlOf } from './proxy.js';
+export { DEFAULT_DEEPSEEK_HOST, DEFAULT_MODEL_HOST_SUFFIXES, DEFAULT_MODEL_HOSTS, createProxyFetch, createRoutingFetch, hostnameOf, normalizeHostEntry, shouldProxy, urlOf, } from './proxy.js';
 export type { ProxyFetch } from './proxy.js';
 /** Plugin short name (also its settings namespace). */
 export declare const name = "http-proxy";

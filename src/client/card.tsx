@@ -250,7 +250,7 @@ export function HttpProxyCard(props: HttpProxyCardProps) {
             <HostField
               id="http-proxy-hosts"
               label="只代理这些域名"
-              hint="留空 = 自动代理所有模型域名；填写 = 只代理列出的这些域名（逗号分隔，支持域名 / 域名:端口 / URL，可从下拉选择）。"
+              hint="留空 = 自动代理所有模型域名；填写 = 只代理列出的这些域名（逗号分隔，支持域名 / 域名:端口 / URL / .域名后缀，如 .aiplatform.googleapis.com，可从下拉选择）。"
               placeholder="gateway.acme.example"
               value={state.proxyHosts}
               suggestions={state.suggestions}
@@ -260,7 +260,7 @@ export function HttpProxyCard(props: HttpProxyCardProps) {
             <HostField
               id="http-proxy-exclude"
               label="排除域名"
-              hint="永远不走代理，优先级最高（逗号分隔，支持域名 / 域名:端口 / URL，可从下拉选择）。"
+              hint="永远不走代理，优先级最高（逗号分隔，支持域名 / 域名:端口 / URL / .域名后缀，可从下拉选择）。"
               placeholder="api.deepseek.com"
               value={state.excludeHosts}
               suggestions={state.suggestions}

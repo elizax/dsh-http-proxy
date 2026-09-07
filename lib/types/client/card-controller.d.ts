@@ -79,7 +79,11 @@ export declare class HttpProxyCardController {
     /** Stop observing both scopes and drop the staged drafts. Idempotent. */
     dispose(): void;
     private snapshot;
-    /** Hostnames offered by the host fields: the default DeepSeek host, every configured gateway, and what is already saved. */
+    /**
+     * Hostnames offered by the host fields: the default DeepSeek host, the
+     * built-in pi-ai catalog endpoints, every configured gateway, and what is
+     * already saved.
+     */
     private suggestions;
     private projection;
     private publish;
