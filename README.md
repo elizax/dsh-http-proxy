@@ -21,8 +21,10 @@
 > ⚠️ **请用带版本号的命令安装**：pnpm ≥ 10 的 `minimumReleaseAge` 策略会暂时跳过刚发布的新版本，不带版本号安装可能解析到旧版。**显式指定版本号可绕过该策略。**
 
 ```bash
-dsh plugin --profile <你的profile名> add dsh-http-proxy@0.1.3
+dsh plugin --profile web add dsh-http-proxy@0.1.3
 ```
+
+> `web` 是 profile 名，换成你自己的 profile 名（如 `headless`）；下文重启与卸载命令里的 profile 名要与此保持一致。
 
 **想装最新版？** 先查最新版本号，把命令里的版本号换掉：
 
@@ -33,7 +35,7 @@ npm view dsh-http-proxy version
 **从 GitHub 装源码版**（始终最新代码，无需编译，需要能访问 GitHub）：
 
 ```bash
-dsh plugin --profile <你的profile名> add github:elizax/dsh-http-proxy
+dsh plugin --profile web add github:elizax/dsh-http-proxy
 ```
 
 > **兼容性**：需要 DSH ≥ 0.1.2-alpha.2（0.1.2 起客户端包做了拆分重组）。更早的 DSH 版本请改用本仓库更早的提交。
@@ -43,7 +45,7 @@ dsh plugin --profile <你的profile名> add github:elizax/dsh-http-proxy
 ## 重启
 
 ```bash
-dsh --profile <你的profile名>
+dsh --profile web
 ```
 
 ## 配置
@@ -83,8 +85,8 @@ DSH 0.1.3 起自带环境变量代理（`HTTP_PROXY` / `HTTPS_PROXY` / `ALL_PROX
 ## 卸载
 
 ```bash
-dsh plugin --profile <你的profile名> remove dsh-http-proxy
-dsh --profile <你的profile名>    # 重启生效
+dsh plugin --profile web remove dsh-http-proxy
+dsh --profile web    # 重启生效
 ```
 
 卸载后 DSH 完全恢复直连，不残留任何配置改动。
