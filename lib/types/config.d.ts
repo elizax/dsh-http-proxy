@@ -23,8 +23,30 @@ export interface Config {
     /** Hostnames that must never be routed, even when auto-detected or listed. */
     excludeHosts: string[];
 }
-/** Runtime schema for {@link Config}. */
-export declare const Config: z<Config>;
+/**
+ * A live config reference the loader keeps updating in place after volatile
+ * writes (0.1.7), or the plain resolved value on hosts without that feature.
+ */
+type VolatileLike<T> = {
+    get(): T;
+};
+/** Resolve a field that may be a plain value or a live volatile reference. */
+export declare function resolveVolatile<T>(value: T | VolatileLike<T>): T;
+/**
+ * Runtime schema for {@link Config}. The annotation stays loose: `.volatile()`
+ * (0.1.7 live-config references) widens the field types past what `z<Config>`
+ * accepts under `exactOptionalPropertyTypes`, while `assertValid` below and
+ * the apply() consumer both operate on resolved plain values.
+ */
+export declare const Config: z<Schemastery.ObjectS<NoInfer<{
+    proxy: z<string, string, "volatile-defined">;
+    proxyHosts: z<NoInfer<string[]>, NoInfer<string[]>, "volatile-defined">;
+    excludeHosts: z<NoInfer<string[]>, NoInfer<string[]>, "volatile-defined">;
+}>>, Schemastery.ObjectT<NoInfer<{
+    proxy: z<string, string, "volatile-defined">;
+    proxyHosts: z<NoInfer<string[]>, NoInfer<string[]>, "volatile-defined">;
+    excludeHosts: z<NoInfer<string[]>, NoInfer<string[]>, "volatile-defined">;
+}>>, "plain">;
 /**
  * Reject a proxy URL this plugin cannot serve. Registered as the settings
  * namespace validator so a bad URL is refused where it is written.
@@ -32,4 +54,5 @@ export declare const Config: z<Config>;
  * @throws Error naming the offending proxy URL.
  */
 export declare function assertValid(config: Config): void;
+export {};
 //# sourceMappingURL=config.d.ts.map

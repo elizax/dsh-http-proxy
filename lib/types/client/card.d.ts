@@ -6,8 +6,8 @@
  */
 import type { InjectFace, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots';
 import type { HttpProxyCardFace } from './card-controller.js';
-/** Props the renderer binds for the http-proxy card. */
-export type HttpProxyCardProps = PropsRuntime<'settings.plugin.item'> & InjectFace<HttpProxyCardFace>;
+/** Props the renderer binds for the http-proxy tab. */
+export type HttpProxyCardProps = PropsRuntime<'settings.plugins.tab'> & InjectFace<HttpProxyCardFace>;
 /**
  * Render the http-proxy card.
  * @param props - the card snapshot and its form actions.

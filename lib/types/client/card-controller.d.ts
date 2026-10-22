@@ -1,14 +1,14 @@
 /**
- * The http-proxy settings card's staged form over the `http-proxy` namespace,
+ * The http-proxy settings tab's staged form over the `http-proxy` namespace,
  * plus the read-only `llm-pi-ai` view that supplies the hostname suggestions
  * for the two host fields.
  *
- * A card stages what the user types and writes only on save, so a typed draft
+ * A tab stages what the user types and writes only on save, so a typed draft
  * never mutates the durable document before the user commits it. The Host's
  * validator remains the authority on what lands; a save that did not land keeps
  * its drafts so the user can correct them.
  */
-import type { SettingsScope } from '@deepseek-ai/dsh-client-ui-settings/client';
+import type { ConfigForm } from './settings-forms-017.js';
 import type { SnapshotStore } from '@deepseek-ai/dsh-client-store';
 /** The `http-proxy` section fields this card edits. */
 export interface HttpProxySettings {
@@ -50,9 +50,9 @@ export interface HttpProxyCardState {
     /** Whether the last save did not land. */
     failed: boolean;
 }
-/** The registration-side face the card's slot entry injects. */
+/** The registration-side face the tab's slot entry renders. */
 export interface HttpProxyCardFace {
-    /** Card snapshot bound by the renderer as useHttpProxyCard. */
+    /** Tab snapshot bound by the renderer as useHttpProxyCard. */
     hooks: {
         httpProxyCard: SnapshotStore<HttpProxyCardState>;
     };
@@ -61,7 +61,7 @@ export interface HttpProxyCardFace {
     /** Write every staged edit. */
     save: () => void;
 }
-/** Bridges the `http-proxy` scope onto the card with a minimal staged form. */
+/** Bridges the `http-proxy` form onto the tab with a minimal staged form. */
 export declare class HttpProxyCardController {
     private readonly scope;
     private readonly known;
@@ -72,11 +72,11 @@ export declare class HttpProxyCardController {
     private saved;
     private failed;
     /**
-     * @param scope - the bound settings scope for the `http-proxy` namespace.
-     * @param known - the bound read-only `llm-pi-ai` scope that supplies gateway hostnames.
+     * @param scope - the shared settings form for the `http-proxy` namespace.
+     * @param known - the read-only `llm-pi-ai` form that supplies gateway hostnames.
      */
-    constructor(scope: SettingsScope<HttpProxySettings>, known: SettingsScope<PiAiSettings>);
-    /** Stop observing both scopes and drop the staged drafts. Idempotent. */
+    constructor(scope: ConfigForm<HttpProxySettings>, known: ConfigForm<PiAiSettings>);
+    /** Stop observing both forms and drop the staged drafts. Idempotent. */
     dispose(): void;
     private snapshot;
     /**

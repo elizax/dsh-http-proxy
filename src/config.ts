@@ -34,11 +34,32 @@ export interface Config {
   excludeHosts: string[]
 }
 
-/** Runtime schema for {@link Config}. */
-export const Config: z<Config> = z.object({
-  proxy: z.string().default(''),
-  proxyHosts: z.array(z.string()).default([]),
-  excludeHosts: z.array(z.string()).default([]),
+/**
+ * A live config reference the loader keeps updating in place after volatile
+ * writes (0.1.7), or the plain resolved value on hosts without that feature.
+ */
+type VolatileLike<T> = { get(): T }
+
+/** Whether a value is a live volatile reference rather than plain data. */
+function isVolatileLike(value: unknown): value is VolatileLike<unknown> {
+  return value !== null && typeof value === 'object' && typeof (value as VolatileLike<unknown>).get === 'function'
+}
+
+/** Resolve a field that may be a plain value or a live volatile reference. */
+export function resolveVolatile<T>(value: T | VolatileLike<T>): T {
+  return (isVolatileLike(value) ? value.get() : value) as T
+}
+
+/**
+ * Runtime schema for {@link Config}. The annotation stays loose: `.volatile()`
+ * (0.1.7 live-config references) widens the field types past what `z<Config>`
+ * accepts under `exactOptionalPropertyTypes`, while `assertValid` below and
+ * the apply() consumer both operate on resolved plain values.
+ */
+export const Config = z.object({
+  proxy: z.string().default('').volatile(),
+  proxyHosts: z.array(z.string()).default([]).volatile(),
+  excludeHosts: z.array(z.string()).default([]).volatile(),
 })
 
 /**

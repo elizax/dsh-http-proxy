@@ -14,9 +14,9 @@ import type {} from './slot-contract.js'
 import { normalizeHostEntry } from '../hosts.js'
 import css from './card.module.css'
 
-/** Props the renderer binds for the http-proxy card. */
+/** Props the renderer binds for the http-proxy tab. */
 export type HttpProxyCardProps =
-  PropsRuntime<'settings.plugin.item'>
+  PropsRuntime<'settings.plugins.tab'>
   & InjectFace<HttpProxyCardFace>
 
 /** One labelled text field: label over input, hint under it. */
@@ -219,7 +219,7 @@ export function HttpProxyCard(props: HttpProxyCardProps) {
   if (!state.available) return null
   const disabled = !state.writable
   return (
-    <li className={open ? `${css.card} ${css.cardOpen}` : css.card}>
+    <div className={open ? `${css.card} ${css.cardOpen}` : css.card}>
       <button
         type="button"
         className={css.header}
@@ -287,6 +287,6 @@ export function HttpProxyCard(props: HttpProxyCardProps) {
           </div>
         )
         : null}
-    </li>
+    </div>
   )
 }

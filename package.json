@@ -57,15 +57,15 @@
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.2",
-    "@deepseek-ai/dsh-client-store": ">=0.1.2-alpha.2",
-    "@deepseek-ai/dsh-client-ui-settings": ">=0.1.2-alpha.2",
-    "@deepseek-ai/dsh-client-ui-renderer": ">=0.1.2-alpha.2",
-    "@deepseek-ai/dsh-client-ui-slots": ">=0.1.2-alpha.2",
-    "@deepseek-ai/dsh-settings": ">=0.1.2-alpha.2",
+    "@deepseek-ai/dsh-client-store": "^0.1.7-alpha.0 || ^0.2.0-alpha.0 || ^0.2.1-alpha.0",
+    "@deepseek-ai/dsh-client-ui-settings": "^0.1.7-alpha.0 || ^0.2.0-alpha.0 || ^0.2.1-alpha.0",
+    "@deepseek-ai/dsh-client-ui-renderer": "^0.1.7-alpha.0 || ^0.2.0-alpha.0 || ^0.2.1-alpha.0",
+    "@deepseek-ai/dsh-client-ui-slots": "^0.1.7-alpha.0 || ^0.2.0-alpha.0 || ^0.2.1-alpha.0",
+    "@deepseek-ai/dsh-settings": "^0.1.7-alpha.0 || ^0.2.0-alpha.0 || ^0.2.1-alpha.0",
     "react": "^18.2.0"
   },
   "dependencies": {
-    "@deepseek-ai/schemastery": "^3.18.2",
+    "@deepseek-ai/schemastery": "^3.18.4",
     "undici": "^7.28.0"
   },
   "devDependencies": {
