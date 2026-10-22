@@ -38,7 +38,7 @@ npm view dsh-http-proxy version
 dsh plugin --profile web add github:elizax/dsh-http-proxy
 ```
 
-> **兼容性**：需要 DSH ≥ 0.1.2-alpha.2（0.1.2 起客户端包做了拆分重组）。更早的 DSH 版本请改用本仓库更早的提交。
+> **兼容性**：需要 DSH ≥ 0.1.7（本分支的设置界面改用 `configForms` 服务与 `settings.plugins.tab` 槽位，均为 0.1.7 引入；已验证 0.1.7-rc.2 / 0.2.0-rc.2 / 0.2.1-rc.2）。旧版 DSH（0.1.2–0.1.6）请改用 0.1.3 版本或本仓库更早的提交。
 
 **升级已装的插件**：用插件市场（dshmarket）的更新功能，或直接用新版本号重新执行上面的安装命令。装不上指定版本（比如镜像同步有延迟）时，稍等片刻重试即可。
 

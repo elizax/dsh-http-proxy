@@ -43,16 +43,30 @@ export type { ProxyFetch } from './proxy.js'
 /** Plugin short name (also its settings namespace). */
 export const name = 'http-proxy'
 
-const NS = 'http-proxy'
+/** The `llm-pi-ai` settings namespace, read-only here. */
+const PI_AI_NS = 'llm-pi-ai'
 
-/** A settings section, read optionally at request time. */
+/** A settings service, read optionally at request time (0.1.7 SettingsForms). */
 interface SettingsLike {
-  get?: (ns: string) => unknown
+  describe?: () => Array<{ ns: string; value?: unknown }>
 }
 
 /** A resolved `llm-pi-ai` section's provider profile subset. */
 interface PiAiSection {
   providers?: Record<string, { baseURL?: string }>
+}
+
+/** Read the `llm-pi-ai` section from the settings service, tolerating absence. */
+function piAiSectionOf(ctx: Context): PiAiSection | undefined {
+  try {
+    const settings = ctx.get('settings') as SettingsLike | undefined
+    const row = settings?.describe?.().find(entry => entry.ns === PI_AI_NS)
+    return row?.value as PiAiSection | undefined
+  } catch {
+    // The settings service is optional: without it the auto host set keeps its
+    // built-in defaults, exactly as before.
+    return undefined
+  }
 }
 
 /**
@@ -93,8 +107,7 @@ function collectProxyHosts(ctx: Context, config: PluginConfig): Set<string> {
         // A malformed base URL is the adapter's to reject, not this plugin's.
       }
     }
-    const settings = ctx.get('settings') as SettingsLike | undefined
-    const section = settings?.get?.('llm-pi-ai') as PiAiSection | undefined
+    const section = piAiSectionOf(ctx)
     for (const profile of Object.values(section?.providers ?? {})) {
       const baseURL = profile.baseURL
       if (baseURL !== undefined && baseURL.length > 0) {
@@ -197,20 +210,16 @@ export function apply(ctx: Context, config: PluginConfig): void {
   // The proxied host set depends on the `llm-pi-ai` gateways, which this
   // plugin does not own. Recompute on any committed settings change so a new
   // or renamed gateway is proxied without a restart (no-op when nothing moved).
-  ctx.on('settings/updated', (ns: unknown) => {
-    if (String(ns) === 'llm-pi-ai') refresh()
+  // 0.1.7 renamed the broadcast to `settings/document-updated` (payload: the
+  // entry id whose section moved); `settings/updated` no longer fires there.
+  ctx.on('settings/document-updated', (ns: unknown) => {
+    if (String(ns) === PI_AI_NS) refresh()
   })
 
-  // Scoped to the settings seam rather than injected outright: the plugin must
-  // keep routing with its composition entry when no provider is present, and
-  // `installSection` restores that entry itself if the provider detaches.
-  ctx.inject(['settings'], (settingsCtx) => {
-    settingsCtx.settings.installSection(ctx, NS, Config, config, {
-      setSource: (source) => {
-        current = source
-      },
-      onChange: refresh,
-      validate: assertValid,
-    })
-  })
+  // 0.1.7 discovery: the loader reads the plugin's flat `Config` export as the
+  // entry schema, and `SettingsForms` (describe/update/replace/mutate) serves
+  // reads and writes — the imperative `installSection` registration this used
+  // to perform was removed upstream, so nothing is registered here. Volatile
+  // fields (see config.ts) make in-place config updates reach `refresh()`'s
+  // next read without remounting this fiber.
 }
